@@ -267,7 +267,7 @@ def get_module_info_by_id(request_args, pro_name):
         if field in ["serial_num"]:
             deploy_module_dict[field] = value != 0 and str(value) or ""
 
-        if field in ["_id", "run_status", "deploy_status", "sonar_status", "jacoco_status"]:
+        if field in ["_id", "run_status", "deploy_status", "sonar_status", "jacoco_status", "deploy_time"]:
             deploy_module_dict[field] = str(value)
 
     return deploy_module_dict
@@ -287,11 +287,14 @@ def update_deploy_info(request_json, pro_name):
     build_env = request_json.get("build_env", "").strip()
     serial_num_str = request_json.get("serial_num", "").strip()
     branch = request_json.get("branch", "").strip()
+    sonar_status = request_json.get("sonar_status", "").strip()
+    sonar_status = sonar_status == "True" or False
 
     if is_null(build_env) or is_null(serial_num_str) or is_null(branch):
         return "必填项 不能为空"
 
-    update_dict = {"build_env": build_env, "serial_num": int(serial_num_str), "branch": branch}
+    update_dict = {"build_env": build_env, "serial_num": int(serial_num_str),
+                   "branch": branch, "sonar_status":sonar_status}
 
     with MongodbUtils(ip=cfg.MONGODB_ADDR, database=cfg.MONGODB_DATABASE, collection=pro_name + cfg.TABLE_MODULE) as pro_db:
         try:
