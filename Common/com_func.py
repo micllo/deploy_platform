@@ -167,7 +167,7 @@ def exception_send_DD(e, msg):
 
 
 def deploy_monitor_send_DD(deploy_name, module_name, exec_type, deploy_host, branch, build_env, deploy_result,
-                           deploy_time, sonar_status, sonar_key, jacoco_status):
+                           deploy_time, sonar_status, sonar_key, jacoco_status, apiTest_status):
     """
     部署监控 发钉钉
     :param deploy_name: ProDemo1-pythonApi-uat-189
@@ -181,6 +181,7 @@ def deploy_monitor_send_DD(deploy_name, module_name, exec_type, deploy_host, bra
     :param sonar_key:
     :param module_name:
     :param jacoco_status:
+    :param apiTest_status:
     :return:
     "\n\n****报告地址：**** [http://" + \
            cfg.TEST_REPORT_URL + pro_name + "](http://" + cfg.TEST_REPORT_URL + pro_name + ")"
@@ -196,6 +197,9 @@ def deploy_monitor_send_DD(deploy_name, module_name, exec_type, deploy_host, bra
         if jacoco_status:
             text += "\n\n****Jacoco报告：**** [" + cfg.JACOCO_REPORT_BASE_URL + module_name + "/report/index.html](" + \
                     cfg.JACOCO_REPORT_BASE_URL + module_name + "/report/index.html)"
+        if apiTest_status:
+            text += "\n\n****API测试报告：**** [" + cfg.API_TEST_REPORT_URL + module_name + "](" + \
+                    cfg.API_TEST_REPORT_URL + module_name + ")"
         send_DD(dd_group_id=cfg.DD_MONITOR_GROUP, title="部署结果", text=text, at_phones=cfg.DD_AT_FXC, is_at_all=False)
     else:
         text += "部署失败 ( " + deploy_result + " )"

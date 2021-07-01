@@ -25,7 +25,7 @@ function update_deploy_status(pro_name, nginx_api_proxy, deploy_name, _id) {
 /**
  *  填充编辑弹框（ 编辑之前 ）
  */
-function fill_edit_frame(pro_name, nginx_api_proxy, _id, sonar_url, jacoco_report_url) {
+function fill_edit_frame(pro_name, nginx_api_proxy, _id, sonar_url, jacoco_report_url, apiTest_report_url) {
 
     // 将按钮禁灰不可点击
     $("#edit_btn").attr('disabled', true);
@@ -56,6 +56,8 @@ function fill_edit_frame(pro_name, nginx_api_proxy, _id, sonar_url, jacoco_repor
 
         $("#apiTest_status_edit").val(deploy_module_dict.apiTest_status);
         $("#apiTest_hostTag_edit").val(deploy_module_dict.apiTest_hostTag);
+        $("#apiTest_report_edit").text(apiTest_report_url + deploy_module_dict.module_name)
+        $("#apiTest_report_edit").attr("href", apiTest_report_url + deploy_module_dict.module_name);
 
         $("#sonar_status_edit").val(deploy_module_dict.sonar_status);
         $("#sonar_key_edit").text(deploy_module_dict.sonar_key);
@@ -64,17 +66,18 @@ function fill_edit_frame(pro_name, nginx_api_proxy, _id, sonar_url, jacoco_repor
         $("#sonar_sources_edit").text(deploy_module_dict.sonar_sources);
         $("#sonar_java_binaries_edit").text(deploy_module_dict.sonar_java_binaries);
         $("#sonar_url_edit").text(sonar_url + deploy_module_dict.sonar_key);
+        $("#sonar_url_edit").attr("href", sonar_url + deploy_module_dict.sonar_key);
 
         if(deploy_module_dict.jacoco_status == "True"){
             $("#jacoco_status_edit").text("开启");
             $("#jacoco_path_edit").text(deploy_module_dict.jacoco_path);
             $("#jacoco_url_edit").text(jacoco_report_url + deploy_module_dict.module_name + "/report/index.html");
+            $("#jacoco_url_edit").attr("href", jacoco_report_url + deploy_module_dict.module_name + "/report/index.html");
         }else{
             $("#jacoco_status_edit").text("关闭");
             $("#jacoco_path_edit").text("");
             $("#jacoco_url_edit").text("");
         }
-
     }
 
     // 将按钮还原可点击
@@ -142,9 +145,9 @@ function single_deploy(pro_name, nginx_api_proxy, deploy_name, exec_type) {
                 swal({text: response_info, type: "error", confirmButtonText: "知道了"});
             }else{
                 var msg = response_info.msg;
-                if (msg.search("部署进行中.....") != -1){
+                if (msg.search("部署进行中") != -1){
                     swal({text: response_info.msg, type: "success", confirmButtonText: "知道了"});
-                    setTimeout(function(){location.reload();}, 1000);
+                    setTimeout(function(){location.reload();}, 5000);
                 }else {
                     swal({text: response_info.msg, type: "error", confirmButtonText: "知道了"});
                     if (msg.search("上次部署还在进行中") != -1){

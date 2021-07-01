@@ -36,6 +36,7 @@ def show_deploy_info(pro_name):
     result_dict["deploy_info_list"], result_dict["pro_is_run"] = get_deploy_info(pro_name)
     result_dict["sonar_url"] = cfg.SONAR_URL
     result_dict["jacoco_report_url"] = cfg.JACOCO_REPORT_BASE_URL
+    result_dict["apiTest_report_url"] = cfg.API_TEST_REPORT_URL
     return render_template('deploy.html', tasks=result_dict)
 
 
@@ -70,7 +71,7 @@ def single_deploy():
     else:
         # 在线程中进行部署
         run_single_deploy(pro_name=pro_name, deploy_name=deploy_name, exec_type=exec_type)
-        res_info["msg"] = deploy_name + "部署进行中....."
+        res_info["msg"] = deploy_name + "部署进行中，请关注钉钉通知"
     return json.dumps(res_info, ensure_ascii=False)
 
 

@@ -11,6 +11,7 @@
         {% set pro_is_run = tasks['pro_is_run'] %}
         {% set sonar_url = tasks['sonar_url'] %}
         {% set jacoco_report_url = tasks['jacoco_report_url'] %}
+        {% set apiTest_report_url = tasks['apiTest_report_url'] %}
         <link href="/{{nginx_api_proxy}}/Build/css/bootstrap-c3f6119851.min.css" rel="stylesheet">
         <link href="/{{nginx_api_proxy}}/Build/css/sweetalert-4dff2482c7.min.css" rel="stylesheet"/>
         <link href="/{{nginx_api_proxy}}/Build/css/font-awesome-6610172f10.css" rel="stylesheet"/>
@@ -257,7 +258,7 @@
                                                                 {% if jacoco_status %}
                                                                     <button class="btn btn-primary" type="button" id="jacoco_btn" onclick="jacoco_exec('{{ pro_name }}','{{ nginx_api_proxy }}','{{ deploy_name }}')">统计覆盖率</button>
                                                                 {% endif %}
-                                                                <button class="btn btn-primary" type="button" id="edit_btn" onclick="fill_edit_frame('{{ pro_name }}','{{ nginx_api_proxy }}','{{ _id }}','{{ sonar_url }}','{{ jacoco_report_url }}')" data-toggle="modal" data-target="#edit_deploy_form" style="margin-left:10px">编 辑</button>
+                                                                <button class="btn btn-primary" type="button" id="edit_btn" onclick="fill_edit_frame('{{ pro_name }}','{{ nginx_api_proxy }}','{{ _id }}','{{ sonar_url }}','{{ jacoco_report_url }}','{{ apiTest_report_url }}')" data-toggle="modal" data-target="#edit_deploy_form" style="margin-left:10px">编 辑</button>
                                                                 <button class="btn btn-primary" type="button" id="deploy_btn" onclick="single_deploy('{{ pro_name }}','{{ nginx_api_proxy }}','{{ deploy_name }}', 'manual')" style="margin-left:10px">部 署</button>
                                                             {% endif %}
                                                         </td>
@@ -396,6 +397,10 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="form-group">
+                            <label class="text-info" style="margin-left:5%;">API测试报告地址：</label>
+                            <a id="apiTest_report_edit" target="_blank" href=""></a>
+                        </div>
 
                         <HR align="center" width="500" color="#987cb9" SIZE=1>
 
@@ -437,7 +442,7 @@
                         </div>
                         <div class="form-group">
                             <label class="text-info" style="margin-left:5%;">Sonar地址：</label>
-                            <label id="sonar_url_edit"></label>
+                            <a id="sonar_url_edit" target="_blank" href=""></a>
                         </div>
 
                         <HR align="center" width="500" color="#987cb9" SIZE=1>
@@ -452,7 +457,7 @@
                         </div>
                         <div class="form-group">
                             <label class="text-info" style="margin-left:5%;">Jacoco地址：</label>
-                            <label id="jacoco_url_edit"></label>
+                            <a id="jacoco_url_edit" target="_blank" href=""></a>
                         </div>
 
                     </div>
@@ -465,11 +470,10 @@
         </div>
 
 
-
         <script src="/{{nginx_api_proxy}}/Build/scripts/jquery-4a356126b9.min.js" type="text/javascript"></script>
         <script src="/{{nginx_api_proxy}}/Build/scripts/bootstrap-4becdc9104.min.js" type="text/javascript"></script>
         <script src="/{{nginx_api_proxy}}/Build/scripts/common-afd42073e5.js" type="text/javascript"></script>
-        <script src="/{{nginx_api_proxy}}/Build/scripts/deploy-b482ee3741.js" type="text/javascript"></script>
+        <script src="/{{nginx_api_proxy}}/Build/scripts/deploy-982c503504.js" type="text/javascript"></script>
         <script src="/{{nginx_api_proxy}}/Build/scripts/sweetalert-73703859f8.min.js" type="text/javascript"></script>
         <script src="/{{nginx_api_proxy}}/Build/scripts/jquery-8f77d5ae3f.dataTables.js" type="text/javascript"></script>
         <script src="/{{nginx_api_proxy}}/Build/scripts/dataTables-2be5d77c55.bootstrap.js" type="text/javascript"></script>

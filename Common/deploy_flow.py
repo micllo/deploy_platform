@@ -28,10 +28,11 @@ import traceback
         （4）检查：
               服务器中最新的部署文件时间戳应该要大于部署前创建的时间戳
               重启服务前后的进程ID是否完全不一样
-        4.接口自动化测试 <可选项>
-        5.Sonar扫描 <可选项>（本地操作）
-        6.生成Jacoco代码覆盖率报告（仅针对Java项目）<可选项>
-        7.部署结果 发送钉钉
+        4.Sonar扫描 <可选项>（本地操作）
+        5.启动Jacoco服务（仅针对Java项目） <可选项>
+        6.接口自动化测试 <可选项>
+        7.生成Jacoco代码覆盖率报告（仅针对Java项目）<可选项>
+        8.部署结果 发送钉钉
         
         《 未 实 现 》
         1.API自动化测试（报告由该平台给出）
@@ -263,6 +264,25 @@ class deployPro(object):
                 if self.current_pid == self.deploy_pid:
                     self.deploy_result = "服务器uWSGI进程ID没有改变"
 
+    def api_auto_test(self):
+        """ API 接口自动化测试 """
+        self.deploy_log += "\n-------- 执 行 API 接 口 测 试 --------\n"
+        with settings(host_string="%s@%s:%s" % (cfg.LOCAL_USER, cfg.LOCAL_HOST, cfg.LOCAL_PORT),
+                      password=cfg.LOCAL_PASSWD):
+            self.custom_run("curl " + cfg.API_TEST_URL + "/" + self.apiTest_hostTag + "/" + self.module_name)
+
+    def start_jacoco_server(self):
+        """ 启动 Jacoco 监听服务 """
+        self.deploy_log += "\n服务器端操作：启动 Jacoco 监听服务\n"
+        try:
+            with settings(host_string="%s@%s:%s" % (self.ssh_user, self.ssh_host, self.ssh_port),
+                          password=self.ssh_passwd):
+                with cd(self.jacoco_path):
+                    self.custom_run("java -jar lib/jacococli.jar dump --address localhost --port 12345 "
+                                    "--destfile report/jacoco.exec")
+        except FabricException as e:
+            self.exception_info = e
+
     def get_jacoco_report(self):
         """
         获取 测试覆盖率报告（仅针对Java项目）
@@ -277,6 +297,8 @@ class deployPro(object):
         :return:
         """
         try:
+            time.sleep(5)  # API 自动化测试 是另起线程执行的
+
             self.deploy_log += "\n-------- 获取Jacoco测试覆盖率报告 --------\n"
             self.deploy_log += "本地操作目录 " + cfg.JACOCO_REPORT_DIR + self.module_name + "\n"
             self.deploy_log += "服务器端操作目录 " + self.jacoco_path + "\n"
@@ -294,7 +316,7 @@ class deployPro(object):
             with settings(host_string="%s@%s:%s" % (self.ssh_user, self.ssh_host, self.ssh_port),
                           password=self.ssh_passwd):
                 with cd(self.jacoco_path):
-                    self.deploy_log += "\n服务器端操作：清理原有内容、生成覆盖率报告、压缩、下载到本地\n"
+                    self.deploy_log += "\n服务器端操作：清除原有内容、生成覆盖率报告、压缩、下载到本地\n"
                     self.custom_run("rm -rf report")
                     self.custom_run("rm -rf report.tar.gz")
                     self.custom_run("java -jar lib/jacococli.jar dump --address localhost --port 12345 "
@@ -303,7 +325,7 @@ class deployPro(object):
                         self.custom_run("java -jar lib/jacococli.jar report report/jacoco.exec --classfiles " +
                                         self.remote_path + "/webapps/" + self.module_name + "/WEB-INF/classes" +
                                         " --html report")
-
+                    time.sleep(2)
                     self.custom_run("tar -czvf report.tar.gz report", stdout_flag=True, clean_output=True)
                     get(remote_path="report.tar.gz", local_path=cfg.JACOCO_REPORT_DIR + self.module_name)
 
@@ -360,14 +382,8 @@ class deployPro(object):
                 self.check_deploy_info()  # 检查部署信息（ 部署文件时间戳、进程ID ）
 
         if is_null(self.deploy_result):
-            # 4.接口自动化测试 <可选项>
-            if self.apiTest_status:
-                with settings(host_string="%s@%s:%s" % (cfg.LOCAL_USER, cfg.LOCAL_HOST, cfg.LOCAL_PORT),
-                              password=cfg.LOCAL_PASSWD):
-                    self.deploy_log += "\n本地操作：执 行 API 接 口 测 试 \n"
-                    self.custom_run("curl " + cfg.API_TEST_BASE_URL + "/" + self.apiTest_hostTag + "/" + self.module_name)
 
-            # 5.Sonar扫描（直接本地操作）<可选项>
+            # 4.Sonar扫描（直接本地操作）<可选项>
             sonar_msg = ""
             if self.sonar_status:
                 self.sonar_scan()  # Sonar 静态扫描（区分项目）
@@ -377,7 +393,15 @@ class deployPro(object):
                     if self.sonar_log.find("ANALYSIS SUCCESSFUL") == -1 or self.sonar_log.find("EXECUTION SUCCESS") == -1:
                         sonar_msg = "(Sonar扫描失败)"
 
-            # 6.生成Jacoco代码覆盖率报告（仅针对Java项目）<可选项>
+            # 5.启动Jacoco服务（仅针对Java项目） <可选项>
+            if self.jacoco_status:
+                self.start_jacoco_server()
+
+            # 6.接口自动化测试 <可选项>
+            if self.apiTest_status:
+                self.api_auto_test()
+
+            # 7.生成Jacoco代码覆盖率报告（仅针对Java项目）<可选项>
             if self.jacoco_status:
                 self.get_jacoco_report()
 
@@ -391,12 +415,12 @@ class deployPro(object):
         self.complete_deploy_log()
         self.output.close()  # 释放StringIO缓冲区，执行此函数后，数据将被释放，也不可再进行操作
 
-        # 5.部署结果 发送钉钉
+        # 8.部署结果 发送钉钉
         deploy_monitor_send_DD(deploy_name=self.deploy_name, module_name=self.module_name, exec_type=self.exec_type,
                                deploy_host=self.ssh_host, branch=self.branch, build_env=self.build_env,
                                deploy_result=self.deploy_result, deploy_time=self.deploy_time,
                                sonar_status=self.sonar_status, sonar_key=self.sonar_key,
-                               jacoco_status=self.jacoco_status)
+                               jacoco_status=self.jacoco_status, apiTest_status=self.apiTest_status)
 
     def local_opt_step_different(self):
         """ 本地操作步骤（区分项目） """

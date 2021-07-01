@@ -33,7 +33,9 @@ LOCAL_PORT = "22"
 WORKSPACE = PRO_PATH + "workspace/"
 
 # API 接口测试
-API_TEST_BASE_URL = "http://192.168.31.9:7060/api_local/API/exec/deploy"
+API_TEST_BASE_URL = "http://192.168.31.9:7060/api_local/API"
+API_TEST_URL = API_TEST_BASE_URL + "/exec/deploy"
+API_TEST_REPORT_URL = API_TEST_BASE_URL + "/get_test_report/"
 
 # Sonar报告 地址
 SONAR_URL = "http://" + SERVER_IP + ":9000/dashboard?id="
