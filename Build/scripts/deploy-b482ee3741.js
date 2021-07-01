@@ -25,7 +25,7 @@ function update_deploy_status(pro_name, nginx_api_proxy, deploy_name, _id) {
 /**
  *  填充编辑弹框（ 编辑之前 ）
  */
-function fill_edit_frame(pro_name, nginx_api_proxy, _id) {
+function fill_edit_frame(pro_name, nginx_api_proxy, _id, sonar_url, jacoco_report_url) {
 
     // 将按钮禁灰不可点击
     $("#edit_btn").attr('disabled', true);
@@ -35,10 +35,16 @@ function fill_edit_frame(pro_name, nginx_api_proxy, _id) {
     var response_info = request_interface_url_v2(url=request_url, method="GET", async=false);
     if(response_info != "请求失败"){
         var deploy_module_dict = response_info.deploy_module_dict
+        console.log("module_name  -> " + deploy_module_dict.module_name)
 
         // 填充内容
         $("#deploy_id_edit").text(_id);
         $("#deploy_name_edit").text(deploy_module_dict.deploy_name);
+
+        $("#build_env_edit").val(deploy_module_dict.build_env);
+        $("#serial_num_edit").val(deploy_module_dict.serial_num);
+        $("#branch_edit").val(deploy_module_dict.branch);
+
         if(deploy_module_dict.run_status == "True"){
             $("#run_status_edit").text("正在运行");
         }else{
@@ -48,9 +54,8 @@ function fill_edit_frame(pro_name, nginx_api_proxy, _id) {
         $("#deploy_file_edit").text(deploy_module_dict.deploy_file);
         $("#remote_path_edit").text(deploy_module_dict.remote_path);
 
-        $("#build_env_edit").val(deploy_module_dict.build_env);
-        $("#serial_num_edit").val(deploy_module_dict.serial_num);
-        $("#branch_edit").val(deploy_module_dict.branch);
+        $("#apiTest_status_edit").val(deploy_module_dict.apiTest_status);
+        $("#apiTest_hostTag_edit").val(deploy_module_dict.apiTest_hostTag);
 
         $("#sonar_status_edit").val(deploy_module_dict.sonar_status);
         $("#sonar_key_edit").text(deploy_module_dict.sonar_key);
@@ -58,13 +63,18 @@ function fill_edit_frame(pro_name, nginx_api_proxy, _id) {
         $("#sonar_version_edit").text(deploy_module_dict.sonar_version);
         $("#sonar_sources_edit").text(deploy_module_dict.sonar_sources);
         $("#sonar_java_binaries_edit").text(deploy_module_dict.sonar_java_binaries);
+        $("#sonar_url_edit").text(sonar_url + deploy_module_dict.sonar_key);
 
-        if(deploy_module_dict.jacoco_status_edit == "True"){
+        if(deploy_module_dict.jacoco_status == "True"){
             $("#jacoco_status_edit").text("开启");
+            $("#jacoco_path_edit").text(deploy_module_dict.jacoco_path);
+            $("#jacoco_url_edit").text(jacoco_report_url + deploy_module_dict.module_name + "/report/index.html");
         }else{
             $("#jacoco_status_edit").text("关闭");
+            $("#jacoco_path_edit").text("");
+            $("#jacoco_url_edit").text("");
         }
-        $("#jacoco_path_edit").text(deploy_module_dict.jacoco_path);
+
     }
 
     // 将按钮还原可点击
@@ -83,9 +93,11 @@ function edit_deploy_info(pro_name, nginx_api_proxy) {
     var serial_num = $("#serial_num_edit").val().trim();
     var branch = $("#branch_edit").val().trim();
     var sonar_status = $("#sonar_status_edit").val().trim();
+    var apiTest_status = $("#apiTest_status_edit").val().trim();
+    var apiTest_hostTag = $("#apiTest_hostTag_edit").val().trim();
 
-    var edit_dict = {"_id": _id, "build_env": build_env, "serial_num": serial_num,
-                    "branch": branch, "sonar_status":sonar_status}
+    var edit_dict = {"_id": _id, "build_env": build_env, "serial_num": serial_num, "branch": branch,
+                     "sonar_status":sonar_status, "apiTest_status":apiTest_status, "apiTest_hostTag":apiTest_hostTag}
 
     // 调用ajax请求(同步)
     var request_url = "/" + nginx_api_proxy + "/DEPLOY/edit_deploy_info/" + pro_name

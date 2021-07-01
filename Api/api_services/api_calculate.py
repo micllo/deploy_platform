@@ -46,6 +46,7 @@ def run_single_deploy(pro_name, deploy_name, exec_type):
                            deploy_type=mi.get("deploy_type"), deploy_file=mi.get("deploy_file"),
                            ssh_user=mi.get("ssh_user"), ssh_passwd=mi.get("ssh_passwd"), ssh_host=mi.get("ssh_host"),
                            ssh_port=mi.get("ssh_port"), remote_path=mi.get("remote_path"), exec_type=exec_type,
+                           apiTest_status=mi.get("apiTest_status"), apiTest_hostTag=mi.get("apiTest_hostTag"),
                            sonar_status=mi.get("sonar_status"), sonar_key=mi.get("sonar_key"),
                            sonar_name=mi.get("sonar_name"), sonar_version=mi.get("sonar_version"),
                            sonar_sources=mi.get("sonar_sources"), sonar_java_binaries=mi.get("sonar_java_binaries"),
@@ -184,7 +185,6 @@ def get_deploy_log(pro_name, deploy_name):
                 # 将部署日志转成list格式（每行间插入空行）
                 deploy_log_str = deploy_log_str.replace("\n\n", "\n-\n")
                 deploy_log_list = deploy_log_str.split("\n")
-                print(deploy_log_list)
                 return deploy_log_list
             else:
                 return None
@@ -267,7 +267,8 @@ def get_module_info_by_id(request_args, pro_name):
         if field in ["serial_num"]:
             deploy_module_dict[field] = value != 0 and str(value) or ""
 
-        if field in ["_id", "run_status", "deploy_status", "sonar_status", "jacoco_status", "deploy_time"]:
+        if field in ["_id", "run_status", "deploy_status", "sonar_status",
+                     "jacoco_status", "apiTest_status", "deploy_time"]:
             deploy_module_dict[field] = str(value)
 
     return deploy_module_dict
@@ -288,13 +289,16 @@ def update_deploy_info(request_json, pro_name):
     serial_num_str = request_json.get("serial_num", "").strip()
     branch = request_json.get("branch", "").strip()
     sonar_status = request_json.get("sonar_status", "").strip()
+    apiTest_status = request_json.get("apiTest_status", "").strip()
+    apiTest_hostTag = request_json.get("apiTest_hostTag", "").strip()
     sonar_status = sonar_status == "True" or False
+    apiTest_status = apiTest_status == "True" or False
 
     if is_null(build_env) or is_null(serial_num_str) or is_null(branch):
         return "必填项 不能为空"
 
-    update_dict = {"build_env": build_env, "serial_num": int(serial_num_str),
-                   "branch": branch, "sonar_status":sonar_status}
+    update_dict = {"build_env": build_env, "serial_num": int(serial_num_str), "branch": branch,
+                   "sonar_status": sonar_status, "apiTest_status": apiTest_status, "apiTest_hostTag": apiTest_hostTag}
 
     with MongodbUtils(ip=cfg.MONGODB_ADDR, database=cfg.MONGODB_DATABASE, collection=pro_name + cfg.TABLE_MODULE) as pro_db:
         try:

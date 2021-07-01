@@ -28,8 +28,8 @@ import traceback
         （4）检查：
               服务器中最新的部署文件时间戳应该要大于部署前创建的时间戳
               重启服务前后的进程ID是否完全不一样
-        4.Sonar扫描 <可选项>（本地操作）
-        5.接口自动化测试 <可选项>
+        4.接口自动化测试 <可选项>
+        5.Sonar扫描 <可选项>（本地操作）
         6.生成Jacoco代码覆盖率报告（仅针对Java项目）<可选项>
         7.部署结果 发送钉钉
         
@@ -56,9 +56,9 @@ env.abort_on_prompts = True  # Fabric 将以非交互模式运行（解决：密
 class deployPro(object):
 
     def __init__(self, pro_name, module_name, deploy_name, branch, build_env, deploy_type, deploy_file,
-                 ssh_user, ssh_passwd, ssh_host, ssh_port, remote_path, exec_type, deploy_time,
-                 sonar_status, sonar_key, sonar_name, sonar_version, sonar_sources, sonar_java_binaries,
-                 jacoco_status, jacoco_path):
+                 ssh_user, ssh_passwd, ssh_host, ssh_port, remote_path, exec_type, deploy_time, apiTest_status,
+                 apiTest_hostTag, sonar_status, sonar_key, sonar_name, sonar_version, sonar_sources,
+                 sonar_java_binaries, jacoco_status, jacoco_path):
         self.pro_name = pro_name        # 项目名称
         self.module_name = module_name  # 模块名称（前端模块，后端模块）
         self.deploy_name = deploy_name  # 部署名称（项目名称-模块名称-构建环境-服务器后3位）eg：MagicWallet-srvTimer-wuxiA-160
@@ -82,6 +82,10 @@ class deployPro(object):
         self.deploy_result = None   # 部署结果
         self.sonar_log = None       # sonar日志
         self.deploy_log = ""        # 部署日志
+
+        # API 测试
+        self.apiTest_status = apiTest_status        # API测试状态（是否启用）
+        self.apiTest_hostTag = apiTest_hostTag      # API测试 host标记（ 与测试平台保持一致 ）
 
         # Sonar 静态代码扫描
         self.sonar_status = sonar_status                # Sonar 状态（是否启用）
@@ -356,7 +360,14 @@ class deployPro(object):
                 self.check_deploy_info()  # 检查部署信息（ 部署文件时间戳、进程ID ）
 
         if is_null(self.deploy_result):
-            # 4.Sonar扫描（直接本地操作）<可选项>
+            # 4.接口自动化测试 <可选项>
+            if self.apiTest_status:
+                with settings(host_string="%s@%s:%s" % (cfg.LOCAL_USER, cfg.LOCAL_HOST, cfg.LOCAL_PORT),
+                              password=cfg.LOCAL_PASSWD):
+                    self.deploy_log += "\n本地操作：执 行 API 接 口 测 试 \n"
+                    self.custom_run("curl " + cfg.API_TEST_BASE_URL + "/" + self.apiTest_hostTag + "/" + self.module_name)
+
+            # 5.Sonar扫描（直接本地操作）<可选项>
             sonar_msg = ""
             if self.sonar_status:
                 self.sonar_scan()  # Sonar 静态扫描（区分项目）

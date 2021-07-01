@@ -34,6 +34,8 @@ def show_deploy_info(pro_name):
     result_dict["nginx_api_proxy"] = cfg.NGINX_API_PROXY
     result_dict["pro_name"] = pro_name
     result_dict["deploy_info_list"], result_dict["pro_is_run"] = get_deploy_info(pro_name)
+    result_dict["sonar_url"] = cfg.SONAR_URL
+    result_dict["jacoco_report_url"] = cfg.JACOCO_REPORT_BASE_URL
     return render_template('deploy.html', tasks=result_dict)
 
 
