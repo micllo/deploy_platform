@@ -33,7 +33,8 @@ def show_deploy_info(pro_name):
     result_dict = dict()
     result_dict["nginx_api_proxy"] = cfg.NGINX_API_PROXY
     result_dict["pro_name"] = pro_name
-    result_dict["deploy_info_list"], result_dict["pro_is_run"] = get_deploy_info(pro_name)
+    result_dict["deploy_info_list"], result_dict["deploy_name_list_str"], result_dict["module_is_run"] = \
+        get_deploy_info(pro_name)
     result_dict["sonar_url"] = cfg.SONAR_URL
     result_dict["jacoco_report_url"] = cfg.JACOCO_REPORT_BASE_URL
     result_dict["apiTest_report_url"] = cfg.API_TEST_REPORT_URL
@@ -148,3 +149,16 @@ def search_deploy_log():
         res_info["msg"] = "部署名称不存在"
     return json.dumps(res_info, ensure_ascii=False)
 
+
+@flask_app.route("/DEPLOY/get_moudule_progress/<pro_name>/<deploy_name>", methods=["GET"])
+def get_moudule_progress(pro_name, deploy_name):
+    """
+    获取 正在运行中的模块 当前进度
+    :param pro_name
+    :param deploy_name
+    :return:
+    """
+    res_info = dict()
+    res_info["_id"], res_info["run_status"], res_info["progress"] \
+        = get_moudule_current_progress(pro_name=pro_name, deploy_name=deploy_name)
+    return json.dumps(res_info, ensure_ascii=False)

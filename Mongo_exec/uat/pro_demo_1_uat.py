@@ -20,7 +20,7 @@ def pro_demo_1_uat():
 
     module_info_list = []
     proDemo1_pythonApi_uat_198 = {
-        "run_status": False,
+        "run_status": True,
         "serial_num": 2,
         "pro_name": "pro_demo_1",
         "module_name": "pythonApi",

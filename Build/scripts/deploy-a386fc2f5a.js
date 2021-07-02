@@ -203,3 +203,83 @@ function jacoco_exec(pro_name, nginx_api_proxy, deploy_name) {
     // 将按钮还原可点击
     $("#jacoco_btn").attr('disabled', false);
 }
+
+
+/**
+ *  更新进度信息
+ */
+function update_progress(pro_name, nginx_api_proxy, module_is_run, deploy_name_list_str) {
+    if(module_is_run == "True"){
+        // 将模块名称列表字符串 转换成 列表
+        var deploy_name_list = deploy_name_list_str.split(",");
+        $.each(deploy_name_list, function(n, deploy_name) {
+            var request_url = "/" + nginx_api_proxy + "/DEPLOY/get_moudule_progress/" + pro_name + "/" + deploy_name
+            var response_info = request_interface_url_v2(url=request_url, method="GET", async=false);
+            var id = response_info._id
+            var run_status = response_info.run_status;
+            var progress = response_info.progress;
+            // 若该模块正在运行中，则轮询修改进度信息
+            if(run_status == true){
+                // 调整 部署时间、部署结果、操作区域
+
+                // ------ 修改 部署时间 ------
+                $('#deploy_result_' + id).empty();  // 清空<td id='deploy_result_{id}'>元素内容
+                $('#exec_result_' + id).remove();   // 删除<span id='exec_result_{id}'>元素
+                // 在<td id='deploy_result_{id}'>元素下添加<span id='exec_result_{id}'>子元素
+                var span = document.createElement('span');
+                span.setAttribute('id', 'exec_result_' + id);
+                document.getElementById('deploy_result_' + id).appendChild(span);
+                // 重新赋值
+                $("#exec_result_" + id).html("部 署 中 ...");
+                $("#exec_result_" + id).attr('style', "font-size:14px");
+                $("#exec_result_" + id).removeClass().addClass("label label-warning");
+
+
+                // 轮询修改进度信息
+                // var interval = setInterval(function () {  // 间隔指定的毫秒数 不停地执行指定的代码，定时器
+                //     // 更新 用例'运行状态、开始时间、运行时间'
+                //     var request_url_1 = "/" + nginx_api_proxy + "/WEB/refresh_case_run_status/" + pro_name
+                //     var response_info_1 = request_interface_url_v2(url=request_url_1, method="GET", async=false);
+                //     var case_run_status_list = response_info_1.data.case_run_status_list
+                //     $.each(case_run_status_list,function (i, case_info) {
+                //         if(case_info.run_status == "pending") {
+                //             $("#run_status_" + case_info.test_method_name).html("待运行");
+                //             $("#run_status_" + case_info.test_method_name).attr('class', 'label label-warning warning');
+                //         }else if(case_info.run_status == "running"){
+                //             $("#run_status_" + case_info.test_method_name).html("运行中");
+                //             $("#run_status_" + case_info.test_method_name).attr('class', 'label label-success success');
+                //             $("#start_time_" + case_info.test_method_name).html(case_info.start_time);
+                //         }else{
+                //             $("#run_status_" + case_info.test_method_name).html("已停止");
+                //             $("#run_status_" + case_info.test_method_name).attr('class', 'label label-danger danger');
+                //             $("#start_time_" + case_info.test_method_name).html(case_info.start_time);
+                //             $("#run_time_" + case_info.test_method_name).html(case_info.run_time);
+                //         }
+                //     })
+                //     // 更新 进度条
+                //     var request_url_2 = "/" + nginx_api_proxy + "/WEB/refresh_run_progress/" + pro_name
+                //     var response_info_2 = request_interface_url_v2(url=request_url_2, method="GET", async=false);
+                //     var progress_info = response_info_2.data.progress_info
+                //     if (progress_info.percent < 100 ) {
+                //         // 更新进度条记录
+                //         $("#progress_bar").css({"width": progress_info.percent + "%"}); // 方式一：修改css样式（修改的是'style'属性中的内容）
+                //         // $("#progress_bar").attr("style", "width:" + progress_info.percent + "%");  // 方式二：修改属性
+                //         $("#progress_label").html(progress_info.percent + " % -- " + progress_info.done_num + " / " + progress_info.run_num);
+                //         // 更新进度条样式
+                //         $("#progress_bar_active").attr("class", "progress progress-striped active");
+                //         if(progress_info.percent > 0 && progress_info.percent < 60 ){
+                //             $("#progress_bar").attr("class", "progress-bar progress-bar-warning");
+                //         }else{
+                //             $("#progress_bar").attr("class", "progress-bar progress-bar-success");
+                //         }
+                //     } else {
+                //         clearInterval(interval); // 用于停止 setInterval() 方法执行的函数代码
+                //         location.reload();
+                //     }
+                // }, 1000);
+            }
+        });
+    }
+
+
+}

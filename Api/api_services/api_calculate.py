@@ -37,8 +37,8 @@ def run_single_deploy(pro_name, deploy_name, exec_type):
         try:
             deploy_time = get_current_iso_date()
 
-            # 开启运行状态
-            pro_db.update({"deploy_name": deploy_name}, {"$set": {"run_status": True}})
+            # 开启运行状态、初始化进度条
+            pro_db.update({"deploy_name": deploy_name}, {"$set": {"run_status": True, "progress": 0}})
 
             mi = pro_db.find_one({"deploy_name": deploy_name})
             dp = deployPro(pro_name=mi.get("pro_name"), module_name=mi.get("module_name"), deploy_time=str(deploy_time),
@@ -62,8 +62,8 @@ def run_single_deploy(pro_name, deploy_name, exec_type):
             exec_type_name = exec_type == "manual" and "手动执行" or "GitLab执行"
             mongo_exception_send_DD(e=e, msg=exec_type_name + "获取'" + deploy_name + "'部署项目")
         finally:
-            # 关闭部署状态
-            pro_db.update({"deploy_name": deploy_name}, {"$set": {"run_status": False}})
+            # 关闭部署状态、初始化进度条
+            pro_db.update({"deploy_name": deploy_name}, {"$set": {"run_status": False, "progress": 0}})
 
 
 @async
@@ -144,6 +144,7 @@ def get_deploy_info(pro_name):
     off_line_info = []
     deploy_info_list = []
     run_list = []
+    deploy_name_list_str = ""
     with MongodbUtils(ip=cfg.MONGODB_ADDR, database=cfg.MONGODB_DATABASE, collection=pro_name + cfg.TABLE_MODULE) as pro_db:
         try:
             results_cursor = pro_db.find({"pro_name": pro_name})
@@ -161,6 +162,7 @@ def get_deploy_info(pro_name):
                 deploy_module_dict["deploy_result"] = res.get("deploy_result")
                 deploy_module_dict["deploy_time"] = res.get("deploy_time")
                 deploy_module_dict["progress"] = res.get("progress")
+                deploy_name_list_str += res.get("deploy_name") + ","
                 if res.get("run_status"):
                     run_list.append(deploy_module_dict)
                 if res.get("deploy_status"):
@@ -172,8 +174,8 @@ def get_deploy_info(pro_name):
         except Exception as e:
             mongo_exception_send_DD(e=e, msg="获取'" + pro_name + "'项目部署信息")
         finally:
-            pro_is_run = len(run_list) != 0
-            return deploy_info_list, pro_is_run
+            module_is_run = len(run_list) != 0
+            return deploy_info_list, deploy_name_list_str[:-1], module_is_run
 
 
 def get_deploy_log(pro_name, deploy_name):
@@ -317,6 +319,20 @@ def update_deploy_info(request_json, pro_name):
             mongo_exception_send_DD(e=e, msg="为'" + pro_name + "'项目'更新部署信息")
             return "mongo error"
     return "更新成功 ！"
+
+
+def get_moudule_current_progress(pro_name, deploy_name):
+    """
+        获取模块当前进度
+    """
+    with MongodbUtils(ip=cfg.MONGODB_ADDR, database=cfg.MONGODB_DATABASE, collection=pro_name + cfg.TABLE_MODULE) as pro_db:
+        try:
+            deploy_name_res = pro_db.find_one({"deploy_name": deploy_name})
+        except Exception as e:
+            log.error(e)
+            mongo_exception_send_DD(e=e, msg="获取'" + deploy_name + "'模块'当前进度")
+            return "mongo error"
+        return str(deploy_name_res.get("_id")), deploy_name_res.get("run_status"), deploy_name_res.get("progress")
 
 
 if __name__ == "__main__":

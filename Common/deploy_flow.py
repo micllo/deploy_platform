@@ -110,6 +110,7 @@ class deployPro(object):
 
         # 进度相关
         self.progress = 0   # 当前进度（初始化）
+        self.setp_num = 4   # 部署步骤（初始化）
         self.increment = 0  # 进度增量（初始化）
         self.get_progress_config()
 
@@ -123,14 +124,13 @@ class deployPro(object):
             1.计算 步骤总数
             2.计算 进度增量
         """
-        setp_num = 4  # 初始化必要步骤
         if self.sonar_status:
-            setp_num += 1
+            self.setp_num += 1
         if self.apiTest_status:
-            setp_num += 1
+            self.setp_num += 1
         if self.jacoco_status:
-            setp_num += 1
-        self.increment = int(100/setp_num)
+            self.setp_num += 1
+        self.increment = int(100/self.setp_num)
 
     def calculate_progress(self):
         """ 计算当前进度 """
@@ -375,6 +375,7 @@ class deployPro(object):
 
     def run_deploy(self):
         self.deploy_log += "\n\n++++++++++++++++++++++++ " + self.deploy_name + " 部 署 开 始 ++++++++++++++++++++++++\n"
+        self.deploy_log += "\n\n++++++++++++++++++++ 共 有 " + str(self.setp_num) + " 个 部 署 步 骤++++++++++++++++++++\n"
         # 1.本地操作（通过SSH方式，为了捕获异常信息）
         mkdir(cfg.WORKSPACE)  # 若目录不存在则创建
         try:
