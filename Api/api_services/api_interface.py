@@ -50,23 +50,20 @@ def show_deploy_log(pro_name):
     return render_template('log.html', tasks=result_dict)
 
 
-# http://127.0.0.1:3310/api_local/DEPLOY/single_deploy/manual/pro_demo_1/pro_demo_1-pythonApi-uat-198
-# http://127.0.0.1:3310/api_local/DEPLOY/single_deploy/manual/pro_demo_1/pro_demo_1-deploy-uat-9
-@flask_app.route("/DEPLOY/single_deploy", methods=["POST"])
-def single_deploy():
+# http://192.168.31.9:3310/api_local/DEPLOY/single_deploy/manual/pro_demo_1/pro_demo_1-pythonApi-uat-198
+# http://192.168.31.9:3310/api_local/DEPLOY/single_deploy/manual/pro_demo_1/pro_demo_1-deploy-uat-9
+@flask_app.route("/DEPLOY/single_deploy/<exec_type>/<pro_name>/<deploy_name>", methods=["POST"])
+def single_deploy(exec_type, pro_name, deploy_name):
     """
     单个部署
         deploy_name： pro_demo_1-pythonApi-uat-198
         exec_type：   manual | gitlab
     :return:
     """
-    pro_name = request.json.get("pro_name", "").strip()
-    exec_type = request.json.get("exec_type", "").strip()
-    deploy_name = request.json.get("deploy_name", "").strip()
     res_info = dict()
     if current_run_status(pro_name, deploy_name):
         if exec_type == "gitlab":
-            deploy_send_DD("\n\n****" + deploy_name + " 模块当前正在部署中，请稍后再执行部署！")
+            deploy_send_DD("#### " + deploy_name + " 模块当前正在部署中，请稍后再执行部署！")
         res_info["msg"] = deploy_name + "上次部署还在进行中"
     else:
         # 在线程中进行部署

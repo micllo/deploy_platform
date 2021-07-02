@@ -47,7 +47,8 @@ def pro_demo_1_uat():
         "sonar_sources": ".",
         "sonar_java_binaries": "",
         "jacoco_status": False,
-        "jacoco_path": ""
+        "jacoco_path": "",
+        "progress": 0
     }
     module_info_list.append(proDemo1_pythonApi_uat_198)
 
@@ -79,7 +80,8 @@ def pro_demo_1_uat():
         "sonar_sources": "src",
         "sonar_java_binaries": "target/classes",
         "jacoco_status": True,
-        "jacoco_path": "/Users/micllo/Documents/works/jacoco"
+        "jacoco_path": "/Users/micllo/Documents/works/jacoco",
+        "progress": 0
     }
     module_info_list.append(proDemo1_deploy_uat_9)
 

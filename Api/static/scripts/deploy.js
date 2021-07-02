@@ -138,20 +138,19 @@ function single_deploy(pro_name, nginx_api_proxy, deploy_name, exec_type) {
         cancelButtonText: "取消"
     }).then(function(isConfirm){
         if (isConfirm) {
-            var data_dict = {"exec_type": exec_type, "pro_name": pro_name, "deploy_name": deploy_name}
-            var request_url = "/" + nginx_api_proxy + "/DEPLOY/single_deploy"
-            var response_info = request_interface_url_v2(url=request_url, method="POST", data=data_dict, async=false);
+            var request_url = "/" + nginx_api_proxy + "/DEPLOY/single_deploy/" + exec_type + "/" + pro_name + "/" + deploy_name
+            var response_info = request_interface_url_v2(url=request_url, method="POST", async=false);
             if(response_info == "请求失败") {
                 swal({text: response_info, type: "error", confirmButtonText: "知道了"});
             }else{
                 var msg = response_info.msg;
                 if (msg.search("部署进行中") != -1){
                     swal({text: response_info.msg, type: "success", confirmButtonText: "知道了"});
-                    setTimeout(function(){location.reload();}, 5000);
+                    setTimeout(function(){location.reload();}, 3000);
                 }else {
                     swal({text: response_info.msg, type: "error", confirmButtonText: "知道了"});
                     if (msg.search("上次部署还在进行中") != -1){
-                        setTimeout(function(){location.reload();}, 5000);
+                        setTimeout(function(){location.reload();}, 3000);
                     }
                 }
             }

@@ -34,12 +34,20 @@ import traceback
         7.生成Jacoco代码覆盖率报告（仅针对Java项目）<可选项>
         8.部署结果 发送钉钉
         
-        《 未 实 现 》
-        1.API自动化测试（报告由该平台给出）
-        
         《 备 注 》
         本地拉取代码的操作 仍然使用SSH登录服务器的方式（登录本地服务器），是为了将操作步骤显示在部署日志中
         若不采用该方式，则无法将操作步骤记录在部署日志中
+
+
+       < 进 度 条 步 骤 >
+         1.本地拉取代码（必须）
+         2.本地构建   （必须）
+         3.上传服务器  （必须）
+         4.服务器端操作（必须）
+         5.sonar扫描    （可选）
+         6.接口自动化测试 （可选）
+         7.生成jacoco报告（可选）
+
 
 """
 
@@ -100,9 +108,34 @@ class deployPro(object):
         self.jacoco_status = jacoco_status              # Jacoco 状态（是否启用）
         self.jacoco_path = jacoco_path                  # Jacoco 路径
 
+        # 进度相关
+        self.progress = 0   # 当前进度（初始化）
+        self.increment = 0  # 进度增量（初始化）
+        self.get_progress_config()
+
     def __del__(self):
         """ 销毁实例对象 """
         self.output.close()
+
+    def get_progress_config(self):
+        """
+            获取进度配置
+            1.计算 步骤总数
+            2.计算 进度增量
+        """
+        setp_num = 4  # 初始化必要步骤
+        if self.sonar_status:
+            setp_num += 1
+        if self.apiTest_status:
+            setp_num += 1
+        if self.jacoco_status:
+            setp_num += 1
+        self.increment = int(100/setp_num)
+
+    def calculate_progress(self):
+        """ 计算当前进度 """
+        self.progress += self.increment
+        self.deploy_log += "\n当前进度：" + str(self.progress) + " %\n"
 
     def complete_deploy_log(self):
         """ 完善 部署日志 """
@@ -349,7 +382,9 @@ class deployPro(object):
                           password=cfg.LOCAL_PASSWD):
                 with cd(cfg.WORKSPACE):
                     self.local_opt_step_common()     # 本地操作步骤（共同）
+                    self.calculate_progress()
                     self.local_opt_step_different()  # 本地操作步骤（区分项目）
+                    self.calculate_progress()
         except FabricException as e:
             self.exception_info = e
 
@@ -361,6 +396,7 @@ class deployPro(object):
         # 2.上传部署文件（获取当前时间戳）
         self.current_time = get_current_timestamp()
         self.upload_deploy_file(self.get_deploy_file_path())
+        self.calculate_progress()
 
         # 3.服务器端操作（解压、配置、重启服务）
         if is_null(self.deploy_result):
@@ -380,6 +416,7 @@ class deployPro(object):
                 self.deploy_result = "服务器端操作有异常"
             else:
                 self.check_deploy_info()  # 检查部署信息（ 部署文件时间戳、进程ID ）
+            self.calculate_progress()
 
         if is_null(self.deploy_result):
 
@@ -392,6 +429,7 @@ class deployPro(object):
                 else:
                     if self.sonar_log.find("ANALYSIS SUCCESSFUL") == -1 or self.sonar_log.find("EXECUTION SUCCESS") == -1:
                         sonar_msg = "(Sonar扫描失败)"
+                self.calculate_progress()
 
             # 5.启动Jacoco服务（仅针对Java项目） <可选项>
             if self.jacoco_status:
@@ -400,10 +438,12 @@ class deployPro(object):
             # 6.接口自动化测试 <可选项>
             if self.apiTest_status:
                 self.api_auto_test()
+                self.calculate_progress()
 
             # 7.生成Jacoco代码覆盖率报告（仅针对Java项目）<可选项>
             if self.jacoco_status:
                 self.get_jacoco_report()
+                self.calculate_progress()
 
             self.deploy_result = "部署成功" + sonar_msg
             self.deploy_log += "\n++++++++++++++++++++++++ " + self.deploy_name + \
@@ -414,6 +454,7 @@ class deployPro(object):
         # 完善部署日志
         self.complete_deploy_log()
         self.output.close()  # 释放StringIO缓冲区，执行此函数后，数据将被释放，也不可再进行操作
+        self.progress = 100
 
         # 8.部署结果 发送钉钉
         deploy_monitor_send_DD(deploy_name=self.deploy_name, module_name=self.module_name, exec_type=self.exec_type,

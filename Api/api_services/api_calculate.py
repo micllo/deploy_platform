@@ -160,6 +160,7 @@ def get_deploy_info(pro_name):
                 deploy_module_dict["run_status"] = res.get("run_status")
                 deploy_module_dict["deploy_result"] = res.get("deploy_result")
                 deploy_module_dict["deploy_time"] = res.get("deploy_time")
+                deploy_module_dict["progress"] = res.get("progress")
                 if res.get("run_status"):
                     run_list.append(deploy_module_dict)
                 if res.get("deploy_status"):
@@ -264,7 +265,7 @@ def get_module_info_by_id(request_args, pro_name):
     # 将所有字段转换成 string 类型
     for field, value in deploy_module_dict.items():
         # 若"部署序号"为0，则赋空值 传递给编辑弹层显示
-        if field in ["serial_num"]:
+        if field in ["serial_num", "progress"]:
             deploy_module_dict[field] = value != 0 and str(value) or ""
 
         if field in ["_id", "run_status", "deploy_status", "sonar_status",
