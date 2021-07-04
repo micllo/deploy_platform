@@ -20,7 +20,7 @@ def pro_demo_1_uat():
 
     module_info_list = []
     proDemo1_pythonApi_uat_198 = {
-        "run_status": True,
+        "run_status": False,
         "serial_num": 2,
         "pro_name": "pro_demo_1",
         "module_name": "pythonApi",
@@ -71,7 +71,7 @@ def pro_demo_1_uat():
         "deploy_time": "----",
         "deploy_log": "----",
         "deploy_result": "----",
-        "apiTest_status": True,
+        "apiTest_status": False,
         "apiTest_hostTag": "deploy_docker",
         "sonar_status": False,
         "sonar_key": "deploy",

@@ -37,8 +37,9 @@ def run_single_deploy(pro_name, deploy_name, exec_type):
         try:
             deploy_time = get_current_iso_date()
 
-            # 开启运行状态、初始化进度条
-            pro_db.update({"deploy_name": deploy_name}, {"$set": {"run_status": True, "progress": 0}})
+            # 开启运行状态、初始化进度条、临时更新部署结果
+            pro_db.update({"deploy_name": deploy_name}, {"$set": {"run_status": True, "progress": 0,
+                                                                  "deploy_result": "部 署 中 ..."}})
 
             mi = pro_db.find_one({"deploy_name": deploy_name})
             dp = deployPro(pro_name=mi.get("pro_name"), module_name=mi.get("module_name"), deploy_time=str(deploy_time),
@@ -62,8 +63,8 @@ def run_single_deploy(pro_name, deploy_name, exec_type):
             exec_type_name = exec_type == "manual" and "手动执行" or "GitLab执行"
             mongo_exception_send_DD(e=e, msg=exec_type_name + "获取'" + deploy_name + "'部署项目")
         finally:
-            # 关闭部署状态、初始化进度条
-            pro_db.update({"deploy_name": deploy_name}, {"$set": {"run_status": False, "progress": 0}})
+            # 关闭部署状态
+            pro_db.update({"deploy_name": deploy_name}, {"$set": {"run_status": False}})
 
 
 @async

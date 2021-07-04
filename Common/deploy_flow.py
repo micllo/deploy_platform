@@ -1,8 +1,8 @@
 # -*- coding:utf-8 -*-
 from Env import env_config as cfg
 import os, time
-from Common.com_func import is_null, log, deploy_monitor_send_DD, mkdir
-
+from Common.com_func import is_null, log, deploy_monitor_send_DD, mkdir, mongo_exception_send_DD
+from Tools.mongodb import MongodbUtils
 from fabric.api import *
 from fabric.api import env
 from io import StringIO
@@ -136,6 +136,14 @@ class deployPro(object):
         """ 计算当前进度 """
         self.progress += self.increment
         self.deploy_log += "\n当前进度：" + str(self.progress) + " %\n"
+        with MongodbUtils(ip=cfg.MONGODB_ADDR, database=cfg.MONGODB_DATABASE,
+                          collection=self.pro_name + cfg.TABLE_MODULE) as pro_db:
+            try:
+                pro_db.update({"deploy_name": self.deploy_name}, {"$set": {"progress": self.progress}})
+            except Exception as e:
+                log.error(e)
+                mongo_exception_send_DD(e=e, msg="更新'" + self.deploy_name + "'模块'当前进度")
+                return "mongo error"
 
     def complete_deploy_log(self):
         """ 完善 部署日志 """
@@ -374,8 +382,8 @@ class deployPro(object):
             # log.info(traceback.print_exc())
 
     def run_deploy(self):
-        self.deploy_log += "\n\n++++++++++++++++++++++++ " + self.deploy_name + " 部 署 开 始 ++++++++++++++++++++++++\n"
-        self.deploy_log += "\n\n++++++++++++++++++++ 共 有 " + str(self.setp_num) + " 个 部 署 步 骤++++++++++++++++++++\n"
+        self.deploy_log += "\n\n+++++++++++++++++ " + self.deploy_name + " 部 署 开 始 ( 共" + str(self.setp_num) + \
+                           "个步骤 ) +++++++++++++++++\n"
         # 1.本地操作（通过SSH方式，为了捕获异常信息）
         mkdir(cfg.WORKSPACE)  # 若目录不存在则创建
         try:
@@ -446,7 +454,7 @@ class deployPro(object):
                 self.get_jacoco_report()
                 self.calculate_progress()
 
-            self.deploy_result = "部署成功" + sonar_msg
+            self.deploy_result = "部 署 成 功" + sonar_msg
             self.deploy_log += "\n++++++++++++++++++++++++ " + self.deploy_name + \
                                " 部 署 成 功 ！！！ ++++++++++++++++++++++++\n"
         else:
@@ -455,7 +463,6 @@ class deployPro(object):
         # 完善部署日志
         self.complete_deploy_log()
         self.output.close()  # 释放StringIO缓冲区，执行此函数后，数据将被释放，也不可再进行操作
-        self.progress = 100
 
         # 8.部署结果 发送钉钉
         deploy_monitor_send_DD(deploy_name=self.deploy_name, module_name=self.module_name, exec_type=self.exec_type,
@@ -495,6 +502,7 @@ class deployPro(object):
             2.配置项目扫描内容
             3.执行扫描
         """
+        self.deploy_log += "\n-------- 执 行 Sonar 扫 描 --------\n"
         try:
             with lcd(cfg.WORKSPACE + self.module_name):
                 # 1.在项目根目录下创建 sonar-project.properties 文件

@@ -190,7 +190,7 @@ def deploy_monitor_send_DD(deploy_name, module_name, exec_type, deploy_host, bra
     text = "#### ****部署项目：**** " + deploy_name + "\n\n****部署服务：**** " + deploy_host + \
            "\n\n****部署分支：**** " + branch + "\n\n****构建环境：**** " + build_env + \
            "\n\n****部署方式：**** " + exec_type_name + "\n\n****部署时间：**** " + deploy_time + "\n\n****部署结果：**** "
-    if "成功" in deploy_result:
+    if "部 署 成 功" in deploy_result:
         text += deploy_result
         if sonar_status and "Sonar" not in deploy_result:
             text += "\n\n****Sonar报告：**** [" + cfg.SONAR_URL + sonar_key + "](" + cfg.SONAR_URL + sonar_key + ")"

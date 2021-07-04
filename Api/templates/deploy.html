@@ -238,8 +238,10 @@
                                                         <td class="text-center" style="width: 100px; color:#4D0000; display:table-cell; vertical-align:middle;" id="deploy_result_{{_id}}">
                                                             {% if "----" in deploy_result %}
                                                                 {{ deploy_result }}
-                                                            {% elif "成功" in deploy_result %}
+                                                            {% elif "部 署 成 功" in deploy_result %}
                                                                 <span id="exec_result_{{_id}}" style="font-size:14px" class="label label-success"> {{ deploy_result }} </span>
+                                                            {% elif "部 署 中" in deploy_result %}
+                                                                <span id="exec_result_{{_id}}" style="font-size:14px" class="label label-warning"> {{ deploy_result }} </span>
                                                             {% else %}
                                                                 <span id="exec_result_{{_id}}" style="font-size:14px" class="label label-danger">{{ deploy_result }}</span>
                                                             {% endif %}
@@ -252,16 +254,16 @@
                                                         <td class="text-center" style="width: 200px; display:table-cell; vertical-align:middle;">
                                                             {% if run_status %}
                                                                 {% if progress in range(0,60)  %}
-                                                                    <div id="progress_bar_active" class="progress progress-striped active">
-                                                                        <div id="progress_bar" class="progress-bar progress-bar-warning" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: {{progress}}%;"></div>
+                                                                    <div id="progress_bar_active_{{_id}}" class="progress progress-striped active">
+                                                                        <div id="progress_bar_{{_id}}" class="progress-bar progress-bar-warning" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: {{progress}}%;"></div>
                                                                     </div>
                                                                 {% elif progress in range(60,100)  %}
-                                                                    <div id="progress_bar_active" class="progress progress-striped active">
-                                                                        <div id="progress_bar" class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: {{progress}}%;"></div>
+                                                                    <div id="progress_bar_active_{{_id}}" class="progress progress-striped active">
+                                                                        <div id="progress_bar_{{_id}}" class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: {{progress}}%;"></div>
                                                                     </div>
                                                                 {% else %}
-                                                                    <div id="progress_bar_active" class="progress progress-striped">
-                                                                        <div id="progress_bar" class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: {{progress}}%;"></div>
+                                                                    <div id="progress_bar_active_{{_id}}" class="progress progress-striped">
+                                                                        <div id="progress_bar_{{_id}}" class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: {{progress}}%;"></div>
                                                                     </div>
                                                                 {% endif %}
                                                             {% else %}
@@ -490,7 +492,7 @@
 
         <!-- 若当前有模块在部署，则实时更新该模块的进度信息 -->
         <script language="javascript" type="text/javascript">
-            $(document).ready(update_progress('{{ pro_name }}','{{ nginx_api_proxy }}', '{{ module_is_run }}', '{{ deploy_name_list_str }}'))
+            $(document).ready(update_module_progress('{{ pro_name }}','{{ nginx_api_proxy }}', '{{ module_is_run }}', '{{ deploy_name_list_str }}'))
         </script>
 
         <!-- 设置埋点，控制台显示页面的 '白屏时间' -->
