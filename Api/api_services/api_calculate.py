@@ -1,15 +1,12 @@
 # -*- coding:utf-8 -*-
 from Env import env_config as cfg
 import os, time
-from Config.case_field_config import get_case_special_field_list, get_not_null_field_list, get_list_field,\
-    get_not_null_field_list_with_depend
 from Tools.mongodb import MongodbUtils
 from Common.com_func import is_null, log, mongo_exception_send_DD, exception_send_DD, mkdir, deploy_send_DD
 from Common.deploy_flow import deployPro
 from Tools.date_helper import get_current_iso_date
 import re
 from bson.objectid import ObjectId
-from Config.case_field_config import get_case_field_name
 from Tools.decorator_tools import async
 import pymongo
 from dateutil import parser
@@ -21,6 +18,20 @@ import traceback
 """
     api 服务底层的业务逻辑
 """
+
+def clear_logs(pro_name, time):
+    """
+    删除指定时间之前 生成的 日志
+      -mmin +1 -> 表示1分钟前的
+      -mtime +1 -> 表示1天前的
+    :param time:
+    :param pro_name:
+    :return:
+    """
+    rm_log_cmd = "find '" + cfg.LOGS_DIR + "' -name '*.log' -mmin +" + str(time) + " -type f -exec rm -rf {} \\;"
+
+    print(rm_log_cmd)
+    os.system(rm_log_cmd)
 
 
 @async

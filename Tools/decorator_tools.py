@@ -8,21 +8,17 @@ from Tools.date_helper import current_timestamp
 from threading import Thread
 import threading
 from functools import wraps
-from Env import env_config as cfg
-from Config.pro_config import get_pro_name
 
 save_mutex = threading.Lock()
 log = FrameLog().log()
 
 
-def retry_request(try_limit=3, interval_time=1, log_show=True, send_dd=False):
+def retry_request(try_limit=3, interval_time=1, log_show=True):
     """
     接口重试
     :param try_limit:
     :param interval_time:
     :param log_show:
-    :param send_dd:
-    :param send_flag:
     :return:
 
      备注：若重试全部失败后，返回 31500
@@ -46,13 +42,6 @@ def retry_request(try_limit=3, interval_time=1, log_show=True, send_dd=False):
                         log.warning("%s: RETRY CNT %s" % (func.__name__, try_cnt))
             if log_show:
                 log.warning("%s: FAILED" % func.__name__)
-            if send_dd:
-                # log.info("interface_url -> " + str(kwargs.get("interface_url", "")))
-                pro_name, server_ip = get_pro_name(str(kwargs.get("interface_url", "")))
-                from Common.com_func import send_DD
-                text = "#### [API]'" + pro_name + "' 项目测试请求 - 接口无响应，服务器iP: " + server_ip
-                send_DD(dd_group_id=cfg.DD_MONITOR_GROUP, title=pro_name, text=text, at_phones=cfg.DD_AT_FXC, is_at_all=False)
-
             return 31500
         return wrapper
     return try_func
