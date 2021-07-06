@@ -6,11 +6,13 @@ def pro_demo_1_uat():
     """
     部署模块导入数据库
     < 备 注 >
-    1.remote_path 远程路径 在服务器端 需要手动 创建 tmp 临时目录
-    2.deploy_status：部署状态（控制部署上下线状态）
-    3.sonar_status：静态扫描状态（判断是否需要执行sonar）
-    4.jacoco_status：测试覆盖率统计（只有java项目才需要）
-    5.run_status：运行状态（判断当前项目是否存在运行中的模块）
+    1.run_status：运行状态（判断当前项目是否存在运行中的模块）
+    2.gitlab_status：代码库自动部署状态（用于gitlab）
+    3.deploy_status：部署状态（用于批量部署，控制部署上下线状态）
+    4.apiTest_status：接口自动化测试状态
+    5.sonar_status：静态扫描状态（判断是否需要执行sonar）
+    6.jacoco_status：测试覆盖率统计（只有java项目才需要）
+    7.remote_path 远程路径 在服务器端 需要手动 创建 tmp 临时目录
     """
     pro_name = "pro_demo_1"
     myclient = pymongo.MongoClient("mongodb://" + cfg.MONGODB_ADDR + "/")  # 创建mongo连接
@@ -21,6 +23,7 @@ def pro_demo_1_uat():
     module_info_list = []
     proDemo1_pythonApi_uat_198 = {
         "run_status": False,
+        "gitlab_status": False,
         "serial_num": 2,
         "pro_name": "pro_demo_1",
         "module_name": "pythonApi",
@@ -54,6 +57,7 @@ def pro_demo_1_uat():
 
     proDemo1_deploy_uat_9 = {
         "run_status": False,
+        "gitlab_status": False,
         "serial_num": 1,
         "pro_name": "pro_demo_1",
         "module_name": "deploy",

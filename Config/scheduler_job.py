@@ -22,13 +22,22 @@ class Config(object):
             'second': "*/10"
             # 执行时间段：周一到周六，10点30-31分之间，每隔10秒 执行一次
         }
+        # {
+        #     'id': 'clear_logs',
+        #     'func': 'Api.api_services.api_calculate:clear_logs',
+        #     'args': [7],
+        #     'trigger': 'interval',
+        #     'seconds': 60
+        #     # 测试使用
+        #     # 每周日10点30分10秒 -> 清理7天前的报告和日志（注意：正式使用时 要把 '-mmin' 改成 '-mtime'）
+        # }
     ]
 
     # JOBS = [
     #     {
-    #         'id': 'clear_excel_logs',
+    #         'id': 'clear_logs',
     #         'func': 'Api.api_services.api_calculate:clear_logs',
-    #         'args': ["pro_demo_1", 7],
+    #         'args': [7],
     #         'trigger': 'cron',
     #         'day_of_week': '0',
     #         'hour': 10,

@@ -19,13 +19,13 @@ import traceback
     api 服务底层的业务逻辑
 """
 
-def clear_logs(pro_name, time):
+
+def clear_logs(time):
     """
     删除指定时间之前 生成的 日志
       -mmin +1 -> 表示1分钟前的
       -mtime +1 -> 表示1天前的
     :param time:
-    :param pro_name:
     :return:
     """
     rm_log_cmd = "find '" + cfg.LOGS_DIR + "' -name '*.log' -mmin +" + str(time) + " -type f -exec rm -rf {} \\;"
@@ -207,9 +207,9 @@ def get_deploy_log(pro_name, deploy_name):
             mongo_exception_send_DD(e=e, msg="获取'" + deploy_name + "'部署项目日志")
 
 
-def current_run_status(pro_name, deploy_name):
+def get_current_status(pro_name, deploy_name):
     """
-    获取当前运行状态
+    获取当前 运行状态、gitlab状态
     :param pro_name:
     :param deploy_name:
     :return:
@@ -217,8 +217,9 @@ def current_run_status(pro_name, deploy_name):
     with MongodbUtils(ip=cfg.MONGODB_ADDR, database=cfg.MONGODB_DATABASE, collection=pro_name + cfg.TABLE_MODULE) as pro_db:
         try:
             mi = pro_db.find_one({"deploy_name": deploy_name})
-            return mi.get("run_status")
-
+            run_status = mi.get("run_status")
+            gitlab_status = mi.get("gitlab_status")
+            return run_status, gitlab_status
         except Exception as e:
             mongo_exception_send_DD(e=e, msg="获取'" + deploy_name + "'项目当前运行状态")
 
@@ -231,7 +232,8 @@ def deploy_is_running(pro_name, deploy_name):
     :return:
     """
     is_run = True
-    with MongodbUtils(ip=cfg.MONGODB_ADDR, database=cfg.MONGODB_DATABASE, collection=pro_name + cfg.TABLE_MODULE) as pro_db:
+    with MongodbUtils(ip=cfg.MONGODB_ADDR, database=cfg.MONGODB_DATABASE,
+                      collection=pro_name + cfg.TABLE_MODULE) as pro_db:
         try:
             deploy_module_cursor = pro_db.find_one({"deploy_name": deploy_name})
             is_run = deploy_module_cursor.get("run_status")
@@ -241,10 +243,63 @@ def deploy_is_running(pro_name, deploy_name):
             return is_run
 
 
+def pro_is_running(pro_name):
+    """
+    判断该项目是否存在运行中的模块
+    :param pro_name:
+    :return:
+    """
+    is_run = False
+    with MongodbUtils(ip=cfg.MONGODB_ADDR, database=cfg.MONGODB_DATABASE, collection=pro_name + cfg.TABLE_MODULE) as pro_db:
+        try:
+            results_cursor = pro_db.find({"pro_name": pro_name})
+            for res in results_cursor:
+                if res.get("run_status"):
+                    is_run = True
+                    break
+        except Exception as e:
+            mongo_exception_send_DD(e=e, msg="获取'" + pro_name + "'项目部署信息")
+        finally:
+            return is_run
+
+
+def update_case_status_all(pro_name, deploy_status=False):
+    """
+    更新项目所有模块的部署状态(上下线)
+    :param pro_name:
+    :param deploy_status:
+    :return:
+    """
+    with MongodbUtils(ip=cfg.MONGODB_ADDR, database=cfg.MONGODB_DATABASE, collection=pro_name + cfg.TABLE_MODULE) as pro_db:
+        try:
+            update_dict = {"$set": {"deploy_status": deploy_status}}
+            pro_db.update({}, update_dict, multi=True)
+            return "更新成功"
+        except Exception as e:
+            mongo_exception_send_DD(e=e, msg="更新'" + pro_name + "'项目所有模块的部署状态")
+            return "mongo error"
+
+
+def stop_run_status(pro_name):
+    """
+    停止所有模块的运行状态
+    :param pro_name:
+    """
+    with MongodbUtils(ip=cfg.MONGODB_ADDR, database=cfg.MONGODB_DATABASE, collection=pro_name + cfg.TABLE_MODULE) as pro_db:
+        try:
+            update_dict = {"$set": {"run_status": False}}
+            pro_db.update({}, update_dict, multi=True)
+            return "停止成功"
+        except Exception as e:
+            mongo_exception_send_DD(e=e, msg="停止'" + pro_name + "'项目所有某款的运行状态")
+            return "mongo error"
+
+
 def update_deploy_status(pro_name, deploy_name, _id):
     """
     更新模块部署状态（单个）
     :param pro_name:
+    :param deploy_name:
     :param _id:
     :return:
     """
@@ -282,7 +337,7 @@ def get_module_info_by_id(request_args, pro_name):
         if field in ["serial_num", "progress"]:
             deploy_module_dict[field] = value != 0 and str(value) or ""
 
-        if field in ["_id", "run_status", "deploy_status", "sonar_status",
+        if field in ["_id", "run_status", "deploy_status", "sonar_status", "gitlab_status",
                      "jacoco_status", "apiTest_status", "deploy_time"]:
             deploy_module_dict[field] = str(value)
 
@@ -306,14 +361,17 @@ def update_deploy_info(request_json, pro_name):
     sonar_status = request_json.get("sonar_status", "").strip()
     apiTest_status = request_json.get("apiTest_status", "").strip()
     apiTest_hostTag = request_json.get("apiTest_hostTag", "").strip()
+    gitlab_status = request_json.get("gitlab_status", "").strip()
     sonar_status = sonar_status == "True" or False
     apiTest_status = apiTest_status == "True" or False
+    gitlab_status = gitlab_status == "True" or False
 
     if is_null(build_env) or is_null(serial_num_str) or is_null(branch):
         return "必填项 不能为空"
 
     update_dict = {"build_env": build_env, "serial_num": int(serial_num_str), "branch": branch,
-                   "sonar_status": sonar_status, "apiTest_status": apiTest_status, "apiTest_hostTag": apiTest_hostTag}
+                   "sonar_status": sonar_status, "apiTest_status": apiTest_status, "apiTest_hostTag": apiTest_hostTag,
+                   "gitlab_status": gitlab_status}
 
     with MongodbUtils(ip=cfg.MONGODB_ADDR, database=cfg.MONGODB_DATABASE, collection=pro_name + cfg.TABLE_MODULE) as pro_db:
         try:

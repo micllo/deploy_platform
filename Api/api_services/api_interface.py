@@ -62,14 +62,18 @@ def single_deploy(exec_type, pro_name, deploy_name):
     :return:
     """
     res_info = dict()
-    if current_run_status(pro_name, deploy_name):
+    run_status, gitlab_status = get_current_status(pro_name, deploy_name)
+    if run_status:
         if exec_type == "gitlab":
             deploy_send_DD("#### " + deploy_name + " 模块当前正在部署中，请稍后再执行部署！")
         res_info["msg"] = deploy_name + "上次部署还在进行中"
     else:
-        # 在线程中进行部署
-        run_single_deploy(pro_name=pro_name, deploy_name=deploy_name, exec_type=exec_type)
-        res_info["msg"] = deploy_name + "部署进行中，请关注钉钉通知"
+        if exec_type == "gitlab" and gitlab_status == False:
+            res_info["msg"] = deploy_name + "模块的 'GitLab'部署状态已关闭"
+        else:
+            # 在线程中进行部署
+            run_single_deploy(pro_name=pro_name, deploy_name=deploy_name, exec_type=exec_type)
+            res_info["msg"] = deploy_name + "部署进行中，请关注钉钉通知"
     return json.dumps(res_info, ensure_ascii=False)
 
 
@@ -162,3 +166,42 @@ def get_moudule_progress(pro_name, deploy_name):
     res_info["_id"], res_info["run_status"], res_info["progress"] \
         = get_moudule_current_progress(pro_name=pro_name, deploy_name=deploy_name)
     return json.dumps(res_info, ensure_ascii=False)
+
+
+@flask_app.route("/DEPLOY/set_deploy_status_all/<pro_name>/<deploy_status>", methods=["GET"])
+def set_case_status_all(pro_name, deploy_status):
+    """
+    设置整个项目'部署模块'的'状态'(上下线)
+    :param pro_name:
+    :param deploy_status:
+    :return:
+    """
+    res_info = dict()
+    if is_null(pro_name) or is_null(deploy_status):
+        res_info["msg"] = PARAMS_NOT_NONE
+    elif pro_is_running(pro_name):
+        res_info["msg"] = CURRENT_IS_RUNNING
+    else:
+        if deploy_status in [True, False, "false", "FALSE", "TRUE", "true"]:
+            deploy_status = deploy_status in [True, "TRUE", "true"] and True or False
+            res_info["msg"] = update_case_status_all(pro_name, deploy_status)
+        else:
+            res_info["msg"] = REQUEST_ARGS_WRONG
+    return json.dumps(res_info, ensure_ascii=False)
+
+
+@flask_app.route("/DEPLOY/stop_run_status_all/<pro_name>", methods=["GET"])
+def stop_run_status_all(pro_name):
+    """
+    停止项目所有'模块'的'运行状态'
+    :param pro_name:
+    :return:
+    """
+    res_info = dict()
+    if is_null(pro_name):
+        res_info["msg"] = PARAMS_NOT_NONE
+    else:
+        res_info["msg"] = stop_run_status(pro_name)
+    return json.dumps(res_info, ensure_ascii=False)
+
+

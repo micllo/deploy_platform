@@ -20,7 +20,69 @@ function update_deploy_status(pro_name, nginx_api_proxy, deploy_name, _id) {
     }
 }
 
+/**
+ * 修改模块的部署状态（所有）
+ */
+function update_deploy_status_all(pro_name, deploy_status, nginx_api_proxy) {
+    swal({
+        title: "确定吗?",
+        text: "",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonText: "确定",
+        cancelButtonText: "取消"
+    }).then(function(isConfirm){
+        if (isConfirm) {
+            // 调用ajax请求(同步)
+            var request_url = "/" + nginx_api_proxy + "/DEPLOY/set_deploy_status_all/" + pro_name + "/" + deploy_status
+            var response_info = request_interface_url_v2(url=request_url, method="GET", async=false);
+            if(response_info != "请求失败"){
+                var msg = response_info.msg;
+                 if (msg.search("成功") != -1){
+                    swal({text: msg, type: "success", confirmButtonText: "知道了"});
+                    setTimeout(function () { location.reload();}, 1000);
+                }else{
+                    swal({text: msg, type: "error", confirmButtonText: "知道了"});
+                }
+            }
+        }
+    }).catch((e) => {
+        console.log(e)
+        console.log("cancel");
+    });
+}
 
+/**
+ * 停止所有模块的部署状态
+ */
+function stop_run_status_all(pro_name, nginx_api_proxy) {
+    swal({
+        title: "确定吗?",
+        text: "",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonText: "确定",
+        cancelButtonText: "取消"
+    }).then(function(isConfirm){
+        if (isConfirm) {
+            // 调用ajax请求(同步)
+            var request_url = "/" + nginx_api_proxy + "/DEPLOY/stop_run_status_all/" + pro_name
+            var response_info = request_interface_url_v2(url=request_url, method="GET", async=false);
+            if(response_info != "请求失败"){
+                var msg = response_info.msg;
+                 if (msg.search("成功") != -1){
+                    swal({text: msg, type: "success", confirmButtonText: "知道了"});
+                    setTimeout(function () { location.reload();}, 1000);
+                }else{
+                    swal({text: msg, type: "error", confirmButtonText: "知道了"});
+                }
+            }
+        }
+    }).catch((e) => {
+        console.log(e)
+        console.log("cancel");
+    });
+}
 
 /**
  *  填充编辑弹框（ 编辑之前 ）
@@ -58,6 +120,8 @@ function fill_edit_frame(pro_name, nginx_api_proxy, _id, sonar_url, jacoco_repor
         $("#apiTest_hostTag_edit").val(deploy_module_dict.apiTest_hostTag);
         $("#apiTest_report_edit").text(apiTest_report_url + deploy_module_dict.module_name)
         $("#apiTest_report_edit").attr("href", apiTest_report_url + deploy_module_dict.module_name);
+
+        $("#gitlab_status_edit").val(deploy_module_dict.gitlab_status);
 
         $("#sonar_status_edit").val(deploy_module_dict.sonar_status);
         $("#sonar_key_edit").text(deploy_module_dict.sonar_key);
@@ -98,9 +162,11 @@ function edit_deploy_info(pro_name, nginx_api_proxy) {
     var sonar_status = $("#sonar_status_edit").val().trim();
     var apiTest_status = $("#apiTest_status_edit").val().trim();
     var apiTest_hostTag = $("#apiTest_hostTag_edit").val().trim();
+    var gitlab_status = $("#gitlab_status_edit").val().trim();
 
     var edit_dict = {"_id": _id, "build_env": build_env, "serial_num": serial_num, "branch": branch,
-                     "sonar_status":sonar_status, "apiTest_status":apiTest_status, "apiTest_hostTag":apiTest_hostTag}
+                     "sonar_status":sonar_status, "apiTest_status":apiTest_status, "apiTest_hostTag":apiTest_hostTag,
+                     "gitlab_status":gitlab_status};
 
     // 调用ajax请求(同步)
     var request_url = "/" + nginx_api_proxy + "/DEPLOY/edit_deploy_info/" + pro_name
@@ -273,6 +339,4 @@ function update_module_progress(pro_name, nginx_api_proxy, module_is_run, deploy
             }
         });
     }
-
-
 }
