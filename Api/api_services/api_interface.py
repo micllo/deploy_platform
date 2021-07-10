@@ -33,6 +33,7 @@ def show_deploy_info(pro_name):
     result_dict = dict()
     result_dict["nginx_api_proxy"] = cfg.NGINX_API_PROXY
     result_dict["pro_name"] = pro_name
+    result_dict["batch_deploy_status"] = get_batch_deploy_status(pro_name=pro_name)
     result_dict["deploy_info_list"], result_dict["deploy_name_list_str"], result_dict["module_is_run"] = \
         get_deploy_info(pro_name)
     result_dict["sonar_url"] = cfg.SONAR_URL
@@ -62,18 +63,25 @@ def single_deploy(exec_type, pro_name, deploy_name):
     :return:
     """
     res_info = dict()
+    batch_deploy_status = get_batch_deploy_status(pro_name=pro_name)
     run_status, gitlab_status = get_current_status(pro_name, deploy_name)
-    if run_status:
-        if exec_type == "gitlab":
-            deploy_send_DD("#### " + deploy_name + " 模块当前正在部署中，请稍后再执行部署！")
-        res_info["msg"] = deploy_name + "上次部署还在进行中"
+    if batch_deploy_status:
+        msg = pro_name + " 项目批量部署正在进行中，请稍后再执行部署！"
+        res_info["msg"] = msg
+        deploy_send_DD("#### " + msg)
     else:
-        if exec_type == "gitlab" and not gitlab_status:
-            res_info["msg"] = deploy_name + "模块的 'GitLab'部署状态已关闭"
+        if run_status:
+            msg = deploy_name + " 模块当前正在部署中，请稍后再执行部署！"
+            if exec_type == "gitlab":
+                deploy_send_DD("#### " + msg)
+            res_info["msg"] = msg
         else:
-            # 在线程中进行部署
-            async_exec(target=run_single_deploy, args=(pro_name, deploy_name, exec_type))
-            res_info["msg"] = deploy_name + "部署进行中，请关注钉钉通知"
+            if exec_type == "gitlab" and not gitlab_status:
+                res_info["msg"] = deploy_name + "模块的 'GitLab'部署状态已关闭"
+            else:
+                # 在线程中进行部署
+                async_exec(target=run_single_deploy, args=(pro_name, deploy_name, exec_type))
+                res_info["msg"] = deploy_name + "部署开始，请关注钉钉通知"
     return json.dumps(res_info, ensure_ascii=False)
 
 
@@ -91,7 +99,7 @@ def batch_deploy(pro_name):
         if is_null(deploy_list):
             res_info["msg"] = pro_name + " 项目没有上线的部署模块"
         else:
-            run_batch_deploy_async(deploy_list=deploy_list)
+            run_batch_deploy_async(pro_name=pro_name, deploy_list=deploy_list)
             res_info["msg"] = pro_name + " 项目批量部署进行中，请关注钉钉通知"
     return json.dumps(res_info, ensure_ascii=False)
 

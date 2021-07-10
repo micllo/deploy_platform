@@ -253,12 +253,12 @@ function single_deploy(pro_name, nginx_api_proxy, deploy_name, exec_type) {
                 swal({text: response_info, type: "error", confirmButtonText: "知道了"});
             }else{
                 var msg = response_info.msg;
-                if (msg.search("部署进行中") != -1){
+                if (msg.search("请关注钉钉通知") != -1){
                     swal({text: response_info.msg, type: "success", confirmButtonText: "知道了"});
                     setTimeout(function(){location.reload();}, 3000);
                 }else {
                     swal({text: response_info.msg, type: "error", confirmButtonText: "知道了"});
-                    if (msg.search("上次部署还在进行中") != -1){
+                    if (msg.search("请稍后再执行部署") != -1){
                         setTimeout(function(){location.reload();}, 3000);
                     }
                 }

@@ -87,41 +87,66 @@ def async_exec(target, args, is_join=False):
 
 
 @async
-def run_batch_deploy_async(deploy_list):
+def run_batch_deploy_async(pro_name, deploy_list):
     """
     批量部署
+    :param pro_name
     :param deploy_list:
     :return:
     """
-    for index, deploy_pro in enumerate(deploy_list):
-        pro_name = deploy_pro.get("pro_name")
-        deploy_name = deploy_pro.get("deploy_name")
-        async_exec(target=run_single_deploy, args=(pro_name, deploy_name, "batch"), is_join=True)
+    with MongodbUtils(ip=cfg.MONGODB_ADDR, database=cfg.MONGODB_DATABASE,
+                      collection=pro_name + cfg.TABLE_CONFIG) as pro_db:
+        try:
+            # 开启批量部署状态
+            pro_db.update({"config_type": "status", "config_name": "batch_deploy"}, {"$set": {"config_value": True}})
+
+            # 依次部署模块
+            for index, deploy_pro in enumerate(deploy_list):
+                pro_name = deploy_pro.get("pro_name")
+                deploy_name = deploy_pro.get("deploy_name")
+                async_exec(target=run_single_deploy, args=(pro_name, deploy_name, "batch"), is_join=True)
+
+            # 关闭批量部署状态
+            pro_db.update({"config_type": "status", "config_name": "batch_deploy"}, {"$set": {"config_value": False}})
+
+        except Exception as e:
+            mongo_exception_send_DD(e=e, msg="更新'" + pro_name + "'项目配置文件")
 
 
 def get_batch_deploy_list(pro_name):
     """
-    获取批量部署里斯本
+    获取批量部署列表
     :param pro_name
-
-    < 备注 > 将上线模块的运行状态全部开启，目的是防止手动或GitLab的调用
     :return:
     """
     deploy_list = []
     with MongodbUtils(ip=cfg.MONGODB_ADDR, database=cfg.MONGODB_DATABASE,
                       collection=pro_name + cfg.TABLE_MODULE) as pro_db:
         try:
-            # 将上线模块的运行状态全部开启
-            # pro_db.update({"deploy_status": True}, {"$set": {"run_status": True}})
             # 获取上线状态的模块
             results_cursor = pro_db.find({"deploy_status": True})
             deploy_list = list(results_cursor)
             # 根据部署序号进行排序
             deploy_list = sorted(deploy_list, key=lambda keys: keys["serial_num"])
         except Exception as e:
-            mongo_exception_send_DD(e=e, msg="获取'" + pro_name + "'部署项目进行批量部署")
+            mongo_exception_send_DD(e=e, msg="获取'" + pro_name + "'项目进行批量部署")
         finally:
             return deploy_list
+
+
+def get_batch_deploy_status(pro_name):
+    """
+    获取批量部署状态
+    :param pro_name:
+    :return:
+    """
+    with MongodbUtils(ip=cfg.MONGODB_ADDR, database=cfg.MONGODB_DATABASE,
+                      collection=pro_name + cfg.TABLE_CONFIG) as pro_db:
+        try:
+            res = pro_db.find_one({"config_type": "status", "config_name": "batch_deploy"})
+            return res.get("config_value")
+        except Exception as e:
+            mongo_exception_send_DD(e=e, msg="获取'" + pro_name + "'项目批量部署状态")
 
 
 @async
@@ -454,7 +479,7 @@ def get_moudule_current_progress(pro_name, deploy_name):
 if __name__ == "__main__":
     # print(get_deploy_log("pro_demo_1", "pro_demo_1-deploy-uat-9"))
     # print(get_deploy_log("pro_demo_1", "pro_demo_1-pythonApi-uat-198"))
-    run_batch_deploy("pro_demo_1")
+    print(get_batch_deploy_status("pro_demo_1"))
 
 
 

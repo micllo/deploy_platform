@@ -8,6 +8,7 @@
         {% set pro_name = tasks['pro_name'] %}
         {% set nginx_api_proxy = tasks['nginx_api_proxy'] %}
         {% set deploy_info_list = tasks['deploy_info_list'] %}
+        {% set batch_deploy_status = tasks['batch_deploy_status'] %}
         {% set deploy_name_list_str = tasks['deploy_name_list_str'] %}
         {% set module_is_run = tasks['module_is_run'] %}
         {% set sonar_url = tasks['sonar_url'] %}
@@ -36,10 +37,18 @@
                               <div class="panel-body">
                                  <div class="col-sm-12">
                                      <div class="col-sm-2" align="center" style="line-height:55px; font-size:15px; margin-left:1%">
-                                         <button id="on_line_all" type="button" class="btn btn-primary" onclick="update_deploy_status_all('{{pro_name}}','true','{{nginx_api_proxy}}')"> 上 线 所 有 模 块 </button>
+                                         {% if batch_deploy_status %}
+                                            <button id="on_line_all" type="button" class="btn btn-primary" disabled> 上 线 所 有 模 块 </button>
+                                         {% else %}
+                                            <button id="on_line_all" type="button" class="btn btn-primary" onclick="update_deploy_status_all('{{pro_name}}','true','{{nginx_api_proxy}}')"> 上 线 所 有 模 块 </button>
+                                         {% endif %}
                                      </div>
                                      <div class="col-sm-2" align="center" style="line-height:55px; font-size:15px; margin-left:7%">
-                                         <button id="off_line_all" type="button" class="btn btn-primary" onclick="update_deploy_status_all('{{pro_name}}','false','{{nginx_api_proxy}}')"> 下 线 所 有 模 块 </button>
+                                         {% if batch_deploy_status %}
+                                            <button id="off_line_all" type="button" class="btn btn-primary" disabled> 下 线 所 有 模 块 </button>
+                                         {% else %}
+                                             <button id="off_line_all" type="button" class="btn btn-primary" onclick="update_deploy_status_all('{{pro_name}}','false','{{nginx_api_proxy}}')"> 下 线 所 有 模 块 </button>
+                                         {% endif %}
                                      </div>
                                      <div class="col-sm-2" align="center" style="line-height:55px; font-size:15px; margin-left:7%">
                                          <button id="stop_status_btn" type="button" class="btn btn-primary" onclick="stop_run_status_all('{{ pro_name }}','{{ nginx_api_proxy }}')"> 停 止 运 行 状 态</button>
@@ -50,7 +59,11 @@
                                  </div>
                                  <div class="col-sm-12">
                                      <div class="col-sm-2" align="center" style="line-height:55px; font-size:15px; margin-left:1%;">
-                                         <button id="batch_deploy" type="button" class="btn btn-primary" onclick="batch_deploy('{{pro_name}}','{{nginx_api_proxy}}')"> 执 行 批 量 部 署 </button>
+                                         {% if batch_deploy_status %}
+                                             <button id="batch_deploy" type="button" class="btn btn-primary" disabled> 执 行 批 量 部 署 </button>
+                                         {% else %}
+                                             <button id="batch_deploy" type="button" class="btn btn-primary" onclick="batch_deploy('{{pro_name}}','{{nginx_api_proxy}}')"> 执 行 批 量 部 署 </button>
+                                         {% endif %}
                                      </div>
                                      {# 进度条 #}
                                      <div class="col-sm-6" style="margin-left:5%; margin-top:2.5%">
@@ -128,7 +141,7 @@
                                                     {% set progress = deploy_info["progress"] %}
                                                     <tr>
                                                         {# 部署状态 #}
-                                                        {% if run_status %}
+                                                        {% if batch_deploy_status %}
                                                             <td class="text-center" style="width:50px; font-size:15px; color:#4D0000; display:table-cell; vertical-align:middle;" id="deploy_status_{{_id}}" disabled >
                                                                 {% if deploy_status %}<font color="#00A600">上 线</font>{% else %}<font color="#DC143C">下 线</font>{% endif %}
                                                             </td>
@@ -168,26 +181,50 @@
 
                                                         {# 操作 #}
                                                         <td class="text-center" style="width: 200px; display:table-cell; vertical-align:middle;">
-                                                            {% if run_status %}
-                                                                {% if progress in range(0,60)  %}
-                                                                    <div id="progress_bar_active_{{_id}}" class="progress progress-striped active">
-                                                                        <div id="progress_bar_{{_id}}" class="progress-bar progress-bar-warning" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: {{progress}}%;"></div>
-                                                                    </div>
-                                                                {% elif progress in range(60,100)  %}
-                                                                    <div id="progress_bar_active_{{_id}}" class="progress progress-striped active">
-                                                                        <div id="progress_bar_{{_id}}" class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: {{progress}}%;"></div>
-                                                                    </div>
+                                                            {% if batch_deploy_status %}
+                                                                {% if run_status %}
+                                                                    {% if progress in range(0,60)  %}
+                                                                        <div id="progress_bar_active_{{_id}}" class="progress progress-striped active">
+                                                                            <div id="progress_bar_{{_id}}" class="progress-bar progress-bar-warning" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: {{progress}}%;"></div>
+                                                                        </div>
+                                                                    {% elif progress in range(60,100)  %}
+                                                                        <div id="progress_bar_active_{{_id}}" class="progress progress-striped active">
+                                                                            <div id="progress_bar_{{_id}}" class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: {{progress}}%;"></div>
+                                                                        </div>
+                                                                    {% else %}
+                                                                        <div id="progress_bar_active_{{_id}}" class="progress progress-striped">
+                                                                            <div id="progress_bar_{{_id}}" class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: {{progress}}%;"></div>
+                                                                        </div>
+                                                                    {% endif %}
                                                                 {% else %}
-                                                                    <div id="progress_bar_active_{{_id}}" class="progress progress-striped">
-                                                                        <div id="progress_bar_{{_id}}" class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: {{progress}}%;"></div>
-                                                                    </div>
+                                                                    {% if jacoco_status %}
+                                                                        <button class="btn btn-primary" type="button" id="jacoco_btn" disabled>统计覆盖率</button>
+                                                                    {% endif %}
+                                                                    <button class="btn btn-primary" type="button" id="edit_btn" style="margin-left:10px" disabled>编 辑</button>
+                                                                    <button class="btn btn-primary" type="button" id="deploy_btn" style="margin-left:10px" disabled>部 署</button>
                                                                 {% endif %}
                                                             {% else %}
-                                                                {% if jacoco_status %}
-                                                                    <button class="btn btn-primary" type="button" id="jacoco_btn" onclick="jacoco_exec('{{ pro_name }}','{{ nginx_api_proxy }}','{{ deploy_name }}')">统计覆盖率</button>
+                                                                {% if run_status %}
+                                                                    {% if progress in range(0,60)  %}
+                                                                        <div id="progress_bar_active_{{_id}}" class="progress progress-striped active">
+                                                                            <div id="progress_bar_{{_id}}" class="progress-bar progress-bar-warning" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: {{progress}}%;"></div>
+                                                                        </div>
+                                                                    {% elif progress in range(60,100)  %}
+                                                                        <div id="progress_bar_active_{{_id}}" class="progress progress-striped active">
+                                                                            <div id="progress_bar_{{_id}}" class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: {{progress}}%;"></div>
+                                                                        </div>
+                                                                    {% else %}
+                                                                        <div id="progress_bar_active_{{_id}}" class="progress progress-striped">
+                                                                            <div id="progress_bar_{{_id}}" class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: {{progress}}%;"></div>
+                                                                        </div>
+                                                                    {% endif %}
+                                                                {% else %}
+                                                                    {% if jacoco_status %}
+                                                                        <button class="btn btn-primary" type="button" id="jacoco_btn" onclick="jacoco_exec('{{ pro_name }}','{{ nginx_api_proxy }}','{{ deploy_name }}')">统计覆盖率</button>
+                                                                    {% endif %}
+                                                                    <button class="btn btn-primary" type="button" id="edit_btn" onclick="fill_edit_frame('{{ pro_name }}','{{ nginx_api_proxy }}','{{ _id }}','{{ sonar_url }}','{{ jacoco_report_url }}','{{ apiTest_report_url }}')" data-toggle="modal" data-target="#edit_deploy_form" style="margin-left:10px">编 辑</button>
+                                                                    <button class="btn btn-primary" type="button" id="deploy_btn" onclick="single_deploy('{{ pro_name }}','{{ nginx_api_proxy }}','{{ deploy_name }}', 'manual')" style="margin-left:10px">部 署</button>
                                                                 {% endif %}
-                                                                <button class="btn btn-primary" type="button" id="edit_btn" onclick="fill_edit_frame('{{ pro_name }}','{{ nginx_api_proxy }}','{{ _id }}','{{ sonar_url }}','{{ jacoco_report_url }}','{{ apiTest_report_url }}')" data-toggle="modal" data-target="#edit_deploy_form" style="margin-left:10px">编 辑</button>
-                                                                <button class="btn btn-primary" type="button" id="deploy_btn" onclick="single_deploy('{{ pro_name }}','{{ nginx_api_proxy }}','{{ deploy_name }}', 'manual')" style="margin-left:10px">部 署</button>
                                                             {% endif %}
                                                         </td>
 
@@ -419,7 +456,7 @@
         <script src="/{{nginx_api_proxy}}/Build/scripts/jquery-4a356126b9.min.js" type="text/javascript"></script>
         <script src="/{{nginx_api_proxy}}/Build/scripts/bootstrap-4becdc9104.min.js" type="text/javascript"></script>
         <script src="/{{nginx_api_proxy}}/Build/scripts/common-afd42073e5.js" type="text/javascript"></script>
-        <script src="/{{nginx_api_proxy}}/Build/scripts/deploy-42ea4267a8.js" type="text/javascript"></script>
+        <script src="/{{nginx_api_proxy}}/Build/scripts/deploy-a87f63ef84.js" type="text/javascript"></script>
         <script src="/{{nginx_api_proxy}}/Build/scripts/sweetalert-73703859f8.min.js" type="text/javascript"></script>
         <script src="/{{nginx_api_proxy}}/Build/scripts/jquery-8f77d5ae3f.dataTables.js" type="text/javascript"></script>
         <script src="/{{nginx_api_proxy}}/Build/scripts/dataTables-2be5d77c55.bootstrap.js" type="text/javascript"></script>

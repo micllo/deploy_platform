@@ -54,8 +54,7 @@ API_ADDR = SERVER_IP + ":" + NGINX_PORT + "/" + NGINX_API_PROXY
 # mongo 数据库
 MONGODB_DATABASE = "deploy_platform"
 TABLE_MODULE = "_module"
-# TABLE_CONFIG = "_config"
-# TABLE_RESULT = "_result"
+TABLE_CONFIG = "_config"
 
 
 # 构建的时候使用前端静态文件路径 ( Api/__init__.py文件的同级目录 ) 'static'、'templates'
