@@ -5,13 +5,9 @@ from Tools.mongodb import MongodbUtils
 from Common.com_func import is_null, log, mongo_exception_send_DD, exception_send_DD, mkdir, deploy_send_DD
 from Common.deploy_flow import deployPro
 from Tools.date_helper import get_current_iso_date
-import re
 from bson.objectid import ObjectId
 from Tools.decorator_tools import async
-import pymongo
-from dateutil import parser
-# sys.path.append("./")
-from Tools.date_helper import get_date_by_days
+from threading import Thread
 from fabric.api import *
 import traceback
 
@@ -29,18 +25,16 @@ def clear_logs(time):
     :return:
     """
     rm_log_cmd = "find '" + cfg.LOGS_DIR + "' -name '*.log' -mmin +" + str(time) + " -type f -exec rm -rf {} \\;"
-
     print(rm_log_cmd)
     os.system(rm_log_cmd)
 
 
-@async
 def run_single_deploy(pro_name, deploy_name, exec_type):
     """
     执行单个部署
     :param pro_name
     :param deploy_name：-> ProDemo1-pythonApi-uat-189
-    :param exec_type：manual | gitlab
+    :param exec_type：manual | batch | gitlab
     :return:
     """
     with MongodbUtils(ip=cfg.MONGODB_ADDR, database=cfg.MONGODB_DATABASE,
@@ -71,11 +65,63 @@ def run_single_deploy(pro_name, deploy_name, exec_type):
                           {"$set": {"run_status": False, "deploy_log": dp.deploy_log,
                                     "deploy_result": dp.deploy_result, "deploy_time": deploy_time}})
         except Exception as e:
-            exec_type_name = exec_type == "manual" and "手动执行" or "GitLab执行"
+            exec_type_name = exec_type == "manual" and "手动执行" or (exec_type == "batch" and "批量执行" or "GitLab执行")
             mongo_exception_send_DD(e=e, msg=exec_type_name + "获取'" + deploy_name + "'部署项目")
         finally:
             # 关闭部署状态
             pro_db.update({"deploy_name": deploy_name}, {"$set": {"run_status": False}})
+
+
+def async_exec(target, args, is_join=False):
+    """
+    异步执行（线程中运行）
+    :param target:  函数名
+    :param args:    参数(元祖)
+    :param is_join: 是否需要线程等待
+    :return:
+    """
+    thr = Thread(target=target, args=args)
+    thr.start()
+    if is_join:
+        thr.join()
+
+
+@async
+def run_batch_deploy_async(deploy_list):
+    """
+    批量部署
+    :param deploy_list:
+    :return:
+    """
+    for index, deploy_pro in enumerate(deploy_list):
+        pro_name = deploy_pro.get("pro_name")
+        deploy_name = deploy_pro.get("deploy_name")
+        async_exec(target=run_single_deploy, args=(pro_name, deploy_name, "batch"), is_join=True)
+
+
+def get_batch_deploy_list(pro_name):
+    """
+    获取批量部署里斯本
+    :param pro_name
+
+    < 备注 > 将上线模块的运行状态全部开启，目的是防止手动或GitLab的调用
+    :return:
+    """
+    deploy_list = []
+    with MongodbUtils(ip=cfg.MONGODB_ADDR, database=cfg.MONGODB_DATABASE,
+                      collection=pro_name + cfg.TABLE_MODULE) as pro_db:
+        try:
+            # 将上线模块的运行状态全部开启
+            # pro_db.update({"deploy_status": True}, {"$set": {"run_status": True}})
+            # 获取上线状态的模块
+            results_cursor = pro_db.find({"deploy_status": True})
+            deploy_list = list(results_cursor)
+            # 根据部署序号进行排序
+            deploy_list = sorted(deploy_list, key=lambda keys: keys["serial_num"])
+        except Exception as e:
+            mongo_exception_send_DD(e=e, msg="获取'" + pro_name + "'部署项目进行批量部署")
+        finally:
+            return deploy_list
 
 
 @async
@@ -406,8 +452,9 @@ def get_moudule_current_progress(pro_name, deploy_name):
 
 
 if __name__ == "__main__":
-    print(get_deploy_log("pro_demo_1", "pro_demo_1-deploy-uat-9"))
+    # print(get_deploy_log("pro_demo_1", "pro_demo_1-deploy-uat-9"))
     # print(get_deploy_log("pro_demo_1", "pro_demo_1-pythonApi-uat-198"))
+    run_batch_deploy("pro_demo_1")
 
 
 

@@ -189,6 +189,49 @@ function edit_deploy_info(pro_name, nginx_api_proxy) {
 
 
 /**
+ *  批量部署
+ */
+function batch_deploy(pro_name, nginx_api_proxy) {
+    // 将按钮禁灰不可点击
+    $("#batch_deploy").attr('disabled', true);
+
+    swal({
+        title: "确定要 批量部署 ?",
+        text: "",
+        type: "warning",
+        showCancelButton: true,
+        confirmButtonText: "确定",
+        cancelButtonText: "取消"
+    }).then(function(isConfirm){
+        if (isConfirm) {
+            var request_url = "/" + nginx_api_proxy + "/DEPLOY/batch_deploy/" + pro_name;
+            var response_info = request_interface_url_v2(url=request_url, method="POST", async=false);
+            if(response_info == "请求失败") {
+                swal({text: response_info, type: "error", confirmButtonText: "知道了"});
+            }else{
+                var msg = response_info.msg;
+                if (msg.search("部署进行中") != -1){
+                    swal({text: response_info.msg, type: "success", confirmButtonText: "知道了"});
+                    setTimeout(function(){location.reload();}, 3000);
+                }else {
+                    swal({text: response_info.msg, type: "error", confirmButtonText: "知道了"});
+                    if (msg.search("存在部署中的模块") != -1){
+                        setTimeout(function(){location.reload();}, 3000);
+                    }
+                }
+            }
+        }
+    }).catch((e) => {
+        console.log(e)
+        console.log("cancel");
+    });
+
+    // 将按钮还原可点击
+    $("#batch_deploy").attr('disabled', false);
+}
+
+
+/**
  *  单个部署
  */
 function single_deploy(pro_name, nginx_api_proxy, deploy_name, exec_type) {
@@ -288,7 +331,7 @@ function update_module_progress(pro_name, nginx_api_proxy, module_is_run, deploy
             var response1 = request_interface_url_v2(url=request_url, method="GET", async=false);
             var run_status = response1.run_status;
             // 若该模块正在运行中，则轮询修改进度信息
-            if(run_status == true){
+            if(run_status){
                 // 轮询修改进度信息
                 var interval = setInterval(function () {  // 间隔指定的毫秒数 不停地执行指定的代码，定时器
                     // 更新 用例'运行状态、开始时间、运行时间'
@@ -313,7 +356,7 @@ function update_module_progress(pro_name, nginx_api_proxy, module_is_run, deploy
                     $('#deploy_time_' + id).empty();
 
                     // ------ 修改 操作（更新进度条） ------
-                    if(run_status == true){
+                    if(run_status){
                         if(progress < 100){
                             // 更新进度条记录
                             $("#progress_bar_" + id).css({"width": progress + "%"}); // 方式一：修改css样式（修改的是'style'属性中的内容）

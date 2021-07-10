@@ -47,15 +47,18 @@ def retry_request(try_limit=3, interval_time=1, log_show=True):
     return try_func
 
 
-def async(func):
+def async(func, is_join=False):
     """
     异步开线程调用
     :param func: 被修饰的函数
+    :param is_join: 是否线程等待
     :return:
     """
     def wrapper(*args, **kwargs):
         thr = Thread(target=func, args=args, kwargs=kwargs)
         thr.start()
+        if is_join:
+            thr.join()
     return wrapper
 
 

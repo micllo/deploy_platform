@@ -81,7 +81,7 @@ class deployPro(object):
         self.ssh_host = ssh_host      # 服务器 地址
         self.ssh_port = ssh_port      # 服务器 端口
         self.remote_path = remote_path  # 服务器 远程路径
-        self.exec_type = exec_type      # 执行方式（ manual | gitlab ）
+        self.exec_type = exec_type      # 执行方式（ manual | batch | gitlab ）
         self.current_time = 0    # 部署前 当前的时间戳
         self.file_time = 0       # 部署后 部署文件的创建时间戳
         self.current_pid = None  # 部署前 PID（ 可能有多个，比如Python的uwsgi ）

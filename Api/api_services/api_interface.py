@@ -58,7 +58,7 @@ def single_deploy(exec_type, pro_name, deploy_name):
     """
     单个部署
         deploy_name： pro_demo_1-pythonApi-uat-198
-        exec_type：   manual | gitlab
+        exec_type：   manual | batch | gitlab
     :return:
     """
     res_info = dict()
@@ -68,12 +68,31 @@ def single_deploy(exec_type, pro_name, deploy_name):
             deploy_send_DD("#### " + deploy_name + " 模块当前正在部署中，请稍后再执行部署！")
         res_info["msg"] = deploy_name + "上次部署还在进行中"
     else:
-        if exec_type == "gitlab" and gitlab_status == False:
+        if exec_type == "gitlab" and not gitlab_status:
             res_info["msg"] = deploy_name + "模块的 'GitLab'部署状态已关闭"
         else:
             # 在线程中进行部署
-            run_single_deploy(pro_name=pro_name, deploy_name=deploy_name, exec_type=exec_type)
+            async_exec(target=run_single_deploy, args=(pro_name, deploy_name, exec_type))
             res_info["msg"] = deploy_name + "部署进行中，请关注钉钉通知"
+    return json.dumps(res_info, ensure_ascii=False)
+
+
+@flask_app.route("/DEPLOY/batch_deploy/<pro_name>", methods=["POST"])
+def batch_deploy(pro_name):
+    """
+    批量部署
+    :return:
+    """
+    res_info = dict()
+    if pro_is_running(pro_name):
+        res_info["msg"] = pro_name + " 项目存在部署中的模块"
+    else:
+        deploy_list = get_batch_deploy_list(pro_name=pro_name)
+        if is_null(deploy_list):
+            res_info["msg"] = pro_name + " 项目没有上线的部署模块"
+        else:
+            run_batch_deploy_async(deploy_list=deploy_list)
+            res_info["msg"] = pro_name + " 项目批量部署进行中，请关注钉钉通知"
     return json.dumps(res_info, ensure_ascii=False)
 
 

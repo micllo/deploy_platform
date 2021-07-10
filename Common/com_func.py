@@ -171,7 +171,7 @@ def deploy_monitor_send_DD(deploy_name, module_name, exec_type, deploy_host, bra
     """
     部署监控 发钉钉
     :param deploy_name: ProDemo1-pythonApi-uat-189
-    :param exec_type:   manual | gitlab
+    :param exec_type:   manual | batch | gitlab
     :param deploy_host:
     :param branch:
     :param build_env:
@@ -186,7 +186,7 @@ def deploy_monitor_send_DD(deploy_name, module_name, exec_type, deploy_host, bra
     "\n\n****报告地址：**** [http://" + \
            cfg.TEST_REPORT_URL + pro_name + "](http://" + cfg.TEST_REPORT_URL + pro_name + ")"
     """
-    exec_type_name = exec_type == "manual" and "手动执行" or "GitLab执行"
+    exec_type_name = exec_type == "manual" and "手动执行" or (exec_type == "batch" and "批量执行" or "GitLab执行")
     text = "#### ****部署项目：**** " + deploy_name + "\n\n****部署服务：**** " + deploy_host + \
            "\n\n****部署分支：**** " + branch + "\n\n****构建环境：**** " + build_env + \
            "\n\n****部署方式：**** " + exec_type_name + "\n\n****部署时间：**** " + deploy_time + "\n\n****部署结果：**** "
