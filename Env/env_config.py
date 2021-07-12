@@ -18,13 +18,6 @@ NGINX_API_PROXY = "api_local"
 # Mongo 地址
 MONGODB_ADDR = SERVER_IP + ":27017"
 
-# gitlab 下载地址
-GITLAB_USERNAME = "root"
-GITLAB_PASSWD = "abcABC123"
-GITLAB_IP = "192.168.31.198"
-GITLAB_PORT = "8088"
-GITLAB_BASE_URL = "http://" + GITLAB_USERNAME + ":" + GITLAB_PASSWD + "@" + GITLAB_IP + ":" + GITLAB_PORT + "/root/"
-
 # 本地环境
 LOCAL_USER = "micllo"
 LOCAL_PASSWD = "abc123"
@@ -56,6 +49,12 @@ MONGODB_DATABASE = "deploy_platform"
 TABLE_MODULE = "_module"
 TABLE_CONFIG = "_config"
 
+# gitlab 下载地址
+GITLAB_USERNAME = "root"
+GITLAB_PASSWD = "abcABC123"
+GITLAB_IP = "192.168.31.198"
+GITLAB_PORT = "8088"
+GITLAB_BASE_URL = "http://" + GITLAB_USERNAME + ":" + GITLAB_PASSWD + "@" + GITLAB_IP + ":" + GITLAB_PORT + "/root/"
 
 # 构建的时候使用前端静态文件路径 ( Api/__init__.py文件的同级目录 ) 'static'、'templates'
 GULP_STATIC_PATH = '../Build'
@@ -73,5 +72,3 @@ MAIL_LIST = ["micllo@126.com"]
 DD_MONITOR_GROUP = "3a2069108f0775762cbbfea363984c9bf59fce5967ada82c78c9fb8df354a624"
 DD_AT_PHONES = "13816439135,18717854213"
 DD_AT_FXC = "13816439135"
-
-

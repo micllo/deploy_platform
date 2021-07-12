@@ -5,7 +5,7 @@ from Env import env_config as cfg
 """
     【 Docker 项 目 配 置 】
     1.在 Docker 中启动新项目时，需要创建 xxxx_config 数据库
-    2.为该数据库添加 添加 批量部署状态
+    2.为该项目添加 批量部署状态
        {"config_type":"status", "config_name":"batch_deploy", "config_value": False}
 """
 

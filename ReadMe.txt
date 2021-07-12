@@ -1,6 +1,18 @@
 
 【 注 意 事 项 】
 
+1.新增项目时
+（1）需要在'Config > pro_config.py'文件中 配置 项目名称列表（ 目的：关联项目模板 ）
+（2）需要给不同项目添加'批量部署状态'配置
+     执行 docker_pro_config.py 中的脚本
+
+2.新增部署模块时
+（1）需要在'Mongo_exec'的对应环境中添加部署模块信息入数据库
+（2）部署流程中各模块的不同配置，需要修改'Common > deploy_flow.py'文件中'区分项目'的地方
+（3）若新模块是java项目，则需要进行Jacoco代码测试覆盖率的JVM配置
+    1）War包：配置在tomcat中
+    2）Jar包：通过命令配置
+
 
 
 ########################################################################################################################
@@ -96,18 +108,18 @@ sudo nginx -s reload
 （2）停止 uWSGI 命令 在 ./stop_uwsgi.sh 脚本
 
 2.上传 GitHub 需要被忽略的文件
-（1）Logs、Reports -> 临时生产的 日志、报告
+（1）Logs、workspace、Jacoco_Report -> 临时生成的 日志、部署根路径、代码覆盖率报告目录
 （2）vassals_local、venv -> 本地的 uWSGI配置、python3虚拟环境
 （3）node_modules、gulpfile.js、package.json、package-lock.json -> 供本地启动使用的gulp工具
 
 3.访问地址（ server.py 启动 ）：
 （1）接口地址 -> http://127.0.0.1:3311/
                http://127.0.0.1:3311/API/index
-               http://127.0.0.1:3311/API/DEPLOY/get_project_case_list/<pro_name>
+               http://127.0.0.1:3311/API/DEPLOY/show_deploy_log/<pro_name>
 
 4.访问地址（ uwsgi 启动 ）：
 （1）页面首页 -> http://localhost:3310/api_local/DEPLOY/index
-（2）部署报告 -> http://localhost:3310/api_local/deploy_report_local/<pro_name>
+（2）部署日志 -> http://localhost:3310/api_local/DEPLOY/show_deploy_log/<pro_name>
 （3）接口地址 -> http://localhost:3310/api_local/DEPLOY/xxxxxxx
    （ 备注：uwgsi 启动 3301 端口、nginx 配置 3310 反向代理 3301 ）
 
@@ -135,13 +147,14 @@ pip3 install -v flask==0.12 -i http://mirrors.aliyun.com/pypi/simple/ --trusted-
 （2）停止 uWSGI 命令 在 ./stop_uwsgi.sh 脚本
 
 2.服务器目录结构
-  /var/log/uwsgi/ 		   -> pid_uwsgi.pid、app_uwsgi.log、emperor.log
-  /var/log/nginx/ 		   -> error.log、access.log
-  /etc/uwsgi/vassals/	   -> app_uwsgi.ini
-  /opt/project/logs/ 	   -> 项目日志
-  /opt/project/reports/	   -> 测试报告
-  /opt/project/${pro_name} -> 项目
-  /opt/project/tmp         -> 临时目录(部署时使用)
+  /var/log/uwsgi/ 		       -> pid_uwsgi.pid、app_uwsgi.log、emperor.log
+  /var/log/nginx/ 		       -> error.log、access.log
+  /etc/uwsgi/vassals/	       -> app_uwsgi.ini
+  /opt/project/logs/ 	       -> 项目日志
+  /opt/project/${pro_name}     -> 项目
+  /opt/project/workspace/      -> 部署项目根路径
+  /opt/project/Jacoco_Report/  -> 代码覆盖率报告目录
+  /opt/project/tmp             -> 临时目录(部署时使用)
 
 3.服务器部署命令：
 （1）从GitGub上拉取代码至临时目录
@@ -160,20 +173,16 @@ pip3 install -v flask==0.12 -i http://mirrors.aliyun.com/pypi/simple/ --trusted-
 （2）将./Env/目录下的 env_config_docker.py 重命名为 env_config.py
 
 6.访问地址（ Docker 内部 ）：
-（1）用例模板 -> http://127.0.0.1:80/api_case_tmpl
-（2）Excel报告 -> http://127.0.0.1:80/test_report/<pro_name>/[API_report]<pro_name>.xls
-（3）页面首页 -> http://127.0.0.1:80/api/API/index
-（4）测试报告 -> http://127.0.0.1:80/api_local/API/get_test_report/<pro_name>
-（5）接口地址 -> http://127.0.0.1:80/api/API/xxxxxxx
+（1）页面首页 -> http://127.0.0.1:80/api/DEPLOY/index
+（2）部署日志 -> http://127.0.0.1:80/api/DEPLOY/show_deploy_log/<pro_name>
+（3）接口地址 -> http://127.0.0.1:80/api/DEPLOY/xxxxxxx
     ( 备注：uwgsi 启动 8081 端口、nginx 配置 80 反向代理 8081 )
 
 7.访问地址（ 外部访问 ）：
-（1）用例模板 -> http://192.168.31.9:1180/api_case_tmpl
-（2）Excel报告 -> http://192.168.31.9:1180/test_report/<pro_name>/[API_report]<pro_name>.xls
-（3）页面首页 -> http://192.168.31.9:1180/api/API/index
-（4）测试报告 -> http://192.168.31.9:1180/api_local/API/get_test_report/<pro_name>
-（5）接口地址 -> http://192.168.31.9:1180/api/API/xxxxxxx
-    ( 备注：docker 配置 1180 映射 80 )
+（1）页面首页 -> http://192.168.31.9:1680/api/DEPLOY/index
+（2）测试报告 -> http://192.168.31.9:1680/api/DEPLOY/show_deploy_log/<pro_name>
+（3）接口地址 -> http://192.168.31.9:1680/api/DEPLOY/xxxxxxx
+    ( 备注：docker 配置 1680 映射 80 )
 
 8.关于部署
   通过'fabric'工具进行部署 -> deploy.py
@@ -190,16 +199,17 @@ pip3 install -v flask==0.12 -i http://mirrors.aliyun.com/pypi/simple/ --trusted-
 【 框 架 结 构 】（ 提高代码的：可读性、重用性、易扩展性 ）
  1.Api层：       对外接口、原静态文件
  2.Build层：     编译后的静态文件
- 3.Common层：    通用方法、获取依赖变量类、验证接口类
- 4.Config层：    用例字段配置、错误码映射、定时任务、项目配置
+ 3.Common层：    通用方法、部署流程类
+ 4.Config层：    错误码映射、定时任务、项目配置
  5.Env层：       环境配置
- 6.Tools层：     工具函数
- 7.其他：
+ 6.Mongo_exec层：部署模块的配置信息（保存入数据库）
+ 7.Tools层：     工具函数
+ 8.其他：
  （1）tmp/ -> 临时存放上传的用例Excel文件
  （2）api_case_tmpl.xlsx  -> 供页面下载的测试用例模板文件
  （3）vassals/ -> 服务器的'uWSGI配置'
  （4）vassals_local/、venv/ -> 本地的'uWSGI配置、python3虚拟环境'
- （5）Logs/、Reports/、Screenshot/ -> 临时生产的 日志、报告、截图
+ （5）Logs/、workspace/、Jacoco_Report/ -> 临时生产的 日志、部署根路径、代码覆盖率报告目录
  （6）node_modules/、gulpfile.js、package.json、package-lock.json -> 供本地启动使用的gulp工具
  （7）deploy.py、start_uwsgi_local.sh、stop_uwsgi_local.sh、tmp_uwsgi_pid.txt -> 本地部署文件及相关命令和临时文件
 
@@ -207,57 +217,31 @@ pip3 install -v flask==0.12 -i http://mirrors.aliyun.com/pypi/simple/ --trusted-
 【 功 能 点 】
 
 1.项目用途
-（1）接口的文档管理
-（2）接口的定时监控（生产环境）
-（3）接口的自动化回归测试（测试环境）
+（1）部署生产环境：通过批量部署功能，一键部署上线的项目模块
+（2）部署测试环境：每个项目模块可以单独部署，并提供部署接口配置GitLab的Webhooks实现自动部署
 
 2.页面功能
-（1）下载接口测试用例模板(Excel)
-（2）批量导入：
-      条件：批量新增、全部替换、批量新增+替换
-（3）相关操作：
-      配置全局变量、配置Host、检查全局变量、检查依赖变量
-      用例批量上下线、单独上下线、停止运行状态
-（4）查看结果：
-      将测试结果导入Excel（通过工作表区分：成功、失败、错误、依赖、未执行）
-      下载测试结果Excel
-（5）搜索用例:
-      条件：用例名称、接口地址、请求方式、用例类型、用例状态、测试结果）
-（6）新增用例（ 模态框 ）
-      类型：依赖接口(设置依赖等级)、测试接口
-      参数化考虑：可以通过原有用例名称一键导入已有的用例，方便修改不同的测试参数
-（7）批量执行测试：
-      a.判断host是否能ping通，确认是否存在网络问题
-      b.判断所有接口中是否存在需要替换的全局变量，若存在则进行替换
-      c.按照依赖等级依次执行依赖接口，若存在下游依赖接口需要上游依赖接口的依赖变量时，则在执行前进行替换
-      d.将所有测试接口中的依赖字段进行替换
-      e.依次执行测试接口
-（8）显示用例相关信息（ 模态框 ）
-      接口名称、接口地址、请求方式、请求参数、响应信息、待验证的关键字、待验证的响应字段列表、测试结果 等
-（9）钉钉或邮件通知：
-      测试完毕后，若存在错误或失败的用例，则会发送邮件或钉钉通知
+（1）相关配置：
+      上下线状态、部署序号、部署分支、是否需要API自动化测试、是否需要Sonar扫描、是否需要Jacoco检测测试覆盖率
+（2）相关功能：
+      单独部署、批量部署、查看部署日志、实时显示部署进度、部署完成发送钉钉通知
 
-3.定时任务
-（1）删除过期(一周前)的文件：日志、报告
-（2）生成报告(每天一次)
-（3）执行接口测试(每天n次)
+3.部署流程
+（1）本地拉取代码  （必须）
+（2）本地构建     （必须）
+（3）上传服务器    （必须）
+（4）服务器端操作  （必须）
+（5）Sonar静态代码扫描  （可选）
+（6）API接口自动化测试   （可选）
+（7）Jacoco测试覆盖率报告（可选，仅限java项目）
 
-3.验证模式
-（1）验证关键字段：验证期望的关键字段值是否正确
-（2）验证响应字段列表：验证期望的响应字段名列表是否正确
+4.定时任务
+（1）删除过期(一周前)的文件：日志
 
-4.依赖逻辑
-（1）若测试接口需要依赖某接口返回的某个字段值，则先执行依赖接口，通过 {{ field }} 的形式进行匹配捕获并替换
-（2）若存在多个依赖接口，且依赖接口之间也存在依赖关系的情况，则通过设置'依赖等级'来控制依赖接口的调用顺序
-（3）若某个依赖接口未请求成功的话，则所有测试接口的测试结果都记录为'依赖接口的问题'
-
-5.请求失败重试逻辑
-（1）通过装饰器，循环执行请求
-（2）若请求失败的，则最多重试3次
 
 
 【 框 架 工 具 】
- Python3 + Flask + uWSGI + Nginx + Bootstrap + MongoDB + Docker + Fabric + Gulp
+ Python3 + Flask + uWSGI + Nginx + Bootstrap + MongoDB + Docker + Fabric + Gulp + Sonar + Jacoco
 
 1.使用 Flask ：
 （1）提供 相关测试接口、页面接口
@@ -285,3 +269,8 @@ pip3 install -v flask==0.12 -i http://mirrors.aliyun.com/pypi/simple/ --trusted-
 （2）编译静态文件，防止浏览器缓存js问题
 （3）实时监听本地调试页面功能
 
+8.使用 Sonar ：
+（1）对代码进行静态扫描
+
+9.使用 Jacoco ：
+（1）针对Java代码执行代码测试覆盖率统计
