@@ -462,7 +462,7 @@ def update_deploy_info(request_json, pro_name):
     return "更新成功 ！"
 
 
-def get_moudule_current_progress(pro_name, deploy_name):
+def get_module_current_progress(pro_name, deploy_name):
     """
         获取模块当前进度
     """
@@ -476,10 +476,38 @@ def get_moudule_current_progress(pro_name, deploy_name):
         return str(deploy_name_res.get("_id")), deploy_name_res.get("run_status"), deploy_name_res.get("progress")
 
 
+def get_batch_current_progress(pro_name):
+    """
+        获取批量部署当前进度
+    """
+    deploy_list = []
+    with MongodbUtils(ip=cfg.MONGODB_ADDR, database=cfg.MONGODB_DATABASE, collection=pro_name + cfg.TABLE_MODULE) as pro_db:
+        try:
+            # 获取数据库集合
+            results_cursor = pro_db.find({"deploy_status": True})
+            # 将集合转换成列表 并按照部署序号排序
+            deploy_list = sorted(list(results_cursor), key=lambda keys: keys["serial_num"])
+        except Exception as e:
+            mongo_exception_send_DD(e=e, msg="获取'" + pro_name + "'项目批量部署进度")
+        finally:
+            all_num = len(deploy_list)
+            done_num = 0
+            progress = 0
+            running_serial_num = -1
+            if all_num:
+                for index, current in enumerate(deploy_list):
+                    if current.get("run_status"):
+                        done_num = index
+                        running_serial_num = current.get("serial_num")
+                        break
+                progress = int(done_num / all_num * 100)
+            return progress, done_num, all_num, running_serial_num
+
+
 if __name__ == "__main__":
     # print(get_deploy_log("pro_demo_1", "pro_demo_1-deploy-uat-9"))
     # print(get_deploy_log("pro_demo_1", "pro_demo_1-pythonApi-uat-198"))
-    print(get_batch_deploy_status("pro_demo_1"))
+    print(get_batch_current_progress("pro_demo_1"))
 
 
 

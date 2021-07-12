@@ -24,7 +24,7 @@ def pro_demo_1_uat():
     proDemo1_pythonApi_uat_198 = {
         "run_status": False,
         "gitlab_status": False,
-        "serial_num": 2,
+        "serial_num": 1,
         "pro_name": "pro_demo_1",
         "module_name": "pythonApi",
         "deploy_name": "pro_demo_1-pythonApi-uat-198",
@@ -58,7 +58,7 @@ def pro_demo_1_uat():
     proDemo1_deploy_uat_9 = {
         "run_status": False,
         "gitlab_status": False,
-        "serial_num": 1,
+        "serial_num": 2,
         "pro_name": "pro_demo_1",
         "module_name": "deploy",
         "deploy_name": "pro_demo_1-deploy-uat-9",
@@ -89,11 +89,43 @@ def pro_demo_1_uat():
     }
     module_info_list.append(proDemo1_deploy_uat_9)
 
+    proDemo1_test_uat_1111 = {
+        "run_status": False,
+        "gitlab_status": False,
+        "serial_num": 8,
+        "pro_name": "pro_demo_1",
+        "module_name": "test",
+        "deploy_name": "pro_demo_1-test-uat-1111",
+        "branch": "test",
+        "build_env": "test",
+        "deploy_type": "War",
+        "deploy_file": "deploy.war",
+        "ssh_host": "192.168.31.9",
+        "ssh_port": "22",
+        "ssh_user": "micllo",
+        "ssh_passwd": "abc123",
+        "remote_path": "/Users/micllo/Documents/tools/apache-tomcat-8.0.21",
+        "deploy_status": False,
+        "deploy_time": "----",
+        "deploy_log": "----",
+        "deploy_result": "----",
+        "apiTest_status": False,
+        "apiTest_hostTag": "deploy_docker",
+        "sonar_status": False,
+        "sonar_key": "deploy",
+        "sonar_name": "deploy",
+        "sonar_version": "1.0",
+        "sonar_sources": "src",
+        "sonar_java_binaries": "target/classes",
+        "jacoco_status": False,
+        "jacoco_path": "/Users/micllo/Documents/works/jacoco",
+        "progress": 0
+    }
+    module_info_list.append(proDemo1_test_uat_1111)
+
     mycoll.insert_many(module_info_list)
     print(" 录 入 成 功 ！")
 
 
 if __name__ == "__main__":
     pro_demo_1_uat()
-
-    # http://127.0.0.1:4567/deploy/DeployApi/jacoco_test_01

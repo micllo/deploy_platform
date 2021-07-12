@@ -9,6 +9,10 @@
         {% set nginx_api_proxy = tasks['nginx_api_proxy'] %}
         {% set deploy_info_list = tasks['deploy_info_list'] %}
         {% set batch_deploy_status = tasks['batch_deploy_status'] %}
+        {% set progress = tasks['progress'] %}
+        {% set done_num = tasks['done_num'] %}
+        {% set all_num = tasks['all_num'] %}
+        {% set running_serial_num = tasks['running_serial_num'] %}
         {% set deploy_name_list_str = tasks['deploy_name_list_str'] %}
         {% set module_is_run = tasks['module_is_run'] %}
         {% set sonar_url = tasks['sonar_url'] %}
@@ -51,7 +55,8 @@
                                          {% endif %}
                                      </div>
                                      <div class="col-sm-2" align="center" style="line-height:55px; font-size:15px; margin-left:7%">
-                                         <button id="stop_status_btn" type="button" class="btn btn-primary" onclick="stop_run_status_all('{{ pro_name }}','{{ nginx_api_proxy }}')"> 停 止 运 行 状 态</button>
+{#                                         <button id="stop_status_btn" type="button" class="btn btn-primary" onclick="stop_run_status_all('{{ pro_name }}','{{ nginx_api_proxy }}')"> 停 止 运 行 状 态</button>#}
+                                         <button id="stop_status_btn" type="button" class="btn btn-primary" onclick="update_batch_progress('{{ pro_name }}','{{ nginx_api_proxy }}', '{{ batch_deploy_status }}')"> 停 止 运 行 状 态</button>
                                      </div>
                                      <div class="col-sm-2" align="center" style="line-height:55px; font-size:15px; margin-left:7%">
                                          <button id="history_report_url" type="button" class="btn btn-primary" onclick="window.open('/{{ nginx_api_proxy }}/DEPLOY/show_deploy_log/{{ pro_name }}')"> 查 看 部 署 日 志</button>
@@ -65,30 +70,30 @@
                                              <button id="batch_deploy" type="button" class="btn btn-primary" onclick="batch_deploy('{{pro_name}}','{{nginx_api_proxy}}')"> 执 行 批 量 部 署 </button>
                                          {% endif %}
                                      </div>
-                                     {# 进度条 #}
+                                     {# 批量 进度条 #}
                                      <div class="col-sm-6" style="margin-left:5%; margin-top:2.5%">
-                                         <div id="progress_bar_active"  align="center" class="progress">
-                                            <div id="progress_bar" class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 100%;"></div>
-                                         </div>
-    {#                                     {% if progress_info.percent in range(0,60)  %}#}
-    {#                                     <div id="progress_bar_active" class="progress progress-striped active">#}
-    {#                                        <div id="progress_bar" class="progress-bar progress-bar-warning" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: {{progress_info.percent}}%;"></div>#}
-    {#                                     </div>#}
-    {#                                     {% elif progress_info.percent in range(60,100)  %}#}
-    {#                                     <div id="progress_bar_active" class="progress progress-striped active">#}
-    {#                                        <div id="progress_bar" class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: {{progress_info.percent}}%;"></div>#}
-    {#                                     </div>#}
-    {#                                     {% else %}#}
-    {#                                     <!-- 在 class="progress progress-striped active" 中的 active 代表 进度条滚动效果 -->#}
-    {#                                     <div id="progress_bar_active" class="progress progress-striped">#}
-    {#                                        <div id="progress_bar" class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: {{progress_info.percent}}%;"></div>#}
-    {#                                     </div>#}
-    {#                                     {% endif %}#}
+                                         {% if batch_deploy_status %}
+                                             <div id="progress_bar_active_batch" class="progress progress-striped active">
+                                                {% if progress in range(0,25)  %}
+                                                    <div id="progress_bar_batch" class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: {{progress}}%;"></div>
+                                                {% elif progress in range(25,50)  %}
+                                                    <div id="progress_bar_batch" class="progress-bar progress-bar-warning" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: {{progress}}%;"></div>
+                                                {% else %}
+                                                    <div id="progress_bar_batch" class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: {{progress}}%;"></div>
+                                                {% endif %}
+                                             </div>
+                                         {% else %}
+                                             {# 当前未执批量部署，则进度条默认拉满 #}
+                                            <div id="progress_bar_active_batch" align="center" class="progress">
+                                               <div id="progress_bar_batch" class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 100%;"></div>
+                                            </div>
+                                         {% endif %}
                                      </div>
                                      {# 进度条百分比统计 #}
-                                     <div class="col-sm-3" style="line-height:30px; margin-top:1%; margin-left:2%;">
-                                         <font color="#844200"><label id="progress_label">  </label></font>
-                                         {# <font color="#844200"><label id="progress_label"> {{progress_info.percent}} % --（ {{progress_info.done_num}} / {{progress_info.run_num}} ） </label></font> #}
+                                     <div class="col-sm-3" style="line-height:30px; margin-top:2%; margin-left:2%;">
+                                        <font color="#844200"><label id="progress_label">
+                                            {% if batch_deploy_status %} {{progress}} % --（ {{done_num}} / {{all_num}} ）{% endif %}
+                                        </label></font>
                                      </div>
 
                                  </div>
@@ -138,6 +143,7 @@
                                                     {% set deploy_result = deploy_info["deploy_result"] %}
                                                     {% set deploy_time = deploy_info["deploy_time"] %}
                                                     {% set run_status = deploy_info["run_status"] %}
+                                                    {% set deploy_status = deploy_info['deploy_status'] %}
                                                     {% set progress = deploy_info["progress"] %}
                                                     <tr>
                                                         {# 部署状态 #}
@@ -163,61 +169,69 @@
                                                         {# 当前分支 #}
                                                         <td class="text-center" style="width: 100px; font-size:16px; color:#8F4586; display:table-cell; vertical-align:middle;" id="branch_{{_id}}">{{ branch }}</td>
 
-                                                        {# 部署结果 #}
+                                                        {# 部署结果 ( 批量部署时，等待部署的模块 部署结果显示'等 待 部 署' ) #}
                                                         <td class="text-center" style="width: 100px; color:#4D0000; display:table-cell; vertical-align:middle;" id="deploy_result_{{_id}}">
-                                                            {% if "----" in deploy_result %}
-                                                                {{ deploy_result }}
-                                                            {% elif "部 署 成 功" in deploy_result %}
-                                                                <span id="exec_result_{{_id}}" style="font-size:14px" class="label label-success"> {{ deploy_result }} </span>
-                                                            {% elif "部 署 中" in deploy_result %}
-                                                                <span id="exec_result_{{_id}}" style="font-size:14px" class="label label-warning"> {{ deploy_result }} </span>
+                                                            {# 批量运行启动 且为 上线状态 #}
+                                                            {% if batch_deploy_status and deploy_status %}
+                                                                {# 1.批量运行中，已经执行完毕的模块 #}
+                                                                {% if serial_num < running_serial_num %}
+                                                                    {% if "部 署 成 功" in deploy_result %}
+                                                                        <span id="exec_result_{{_id}}" style="font-size:14px" class="label label-success"> {{ deploy_result }} </span>
+                                                                    {% else %}
+                                                                        <span id="exec_result_{{_id}}" style="font-size:14px" class="label label-danger">{{ deploy_result }}</span>
+                                                                    {% endif %}
+                                                                {# 2.批量运行中，正在进行部署的模块 #}
+                                                                {% elif serial_num == running_serial_num %}
+                                                                    <span id="exec_result_{{_id}}" style="font-size:14px" class="label label-warning"> 部 署 中 ... </span>
+                                                                {# 3.批量运行中，还未执行的模块 #}
+                                                                {% else %}
+                                                                    <span id="exec_result_{{_id}}" style="font-size:14px" class="label label-info"> 等 待 部 署 </span>
+                                                                {% endif %}
                                                             {% else %}
-                                                                <span id="exec_result_{{_id}}" style="font-size:14px" class="label label-danger">{{ deploy_result }}</span>
+                                                                {% if "----" in deploy_result %}
+                                                                    {{ deploy_result }}
+                                                                {% elif "部 署 成 功" in deploy_result %}
+                                                                    <span id="exec_result_{{_id}}" style="font-size:14px" class="label label-success"> {{ deploy_result }} </span>
+                                                                {% elif "部 署 中 ..." in deploy_result %}
+                                                                    <span id="exec_result_{{_id}}" style="font-size:14px" class="label label-warning"> {{ deploy_result }} </span>
+                                                                {% else %}
+                                                                    <span id="exec_result_{{_id}}" style="font-size:14px" class="label label-danger">{{ deploy_result }}</span>
+                                                                {% endif %}
                                                             {% endif %}
                                                         </td>
 
-                                                        {# 部署时间 #}
-                                                        <td class="text-center" style="width: 150px; font-size:16px; color:#4D0000; display:table-cell; vertical-align:middle;" id="deploy_time_{{_id}}">{{ deploy_time }}</td>
+                                                        {# 部署时间 ( 批量部署时，等待部署的模块 不显示部署时间 ) #}
+                                                        <td class="text-center" style="width: 150px; font-size:16px; color:#4D0000; display:table-cell; vertical-align:middle;" id="deploy_time_{{_id}}">
+                                                            {# 批量运行启动 且为 上线状态 #}
+                                                            {% if batch_deploy_status and deploy_status and serial_num >= running_serial_num %}
+                                                            {% else %}
+                                                                {{ deploy_time }}
+                                                            {% endif %}
+                                                        </td>
 
                                                         {# 操作 #}
                                                         <td class="text-center" style="width: 200px; display:table-cell; vertical-align:middle;">
-                                                            {% if batch_deploy_status %}
-                                                                {% if run_status %}
-                                                                    {% if progress in range(0,60)  %}
-                                                                        <div id="progress_bar_active_{{_id}}" class="progress progress-striped active">
-                                                                            <div id="progress_bar_{{_id}}" class="progress-bar progress-bar-warning" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: {{progress}}%;"></div>
-                                                                        </div>
-                                                                    {% elif progress in range(60,100)  %}
-                                                                        <div id="progress_bar_active_{{_id}}" class="progress progress-striped active">
-                                                                            <div id="progress_bar_{{_id}}" class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: {{progress}}%;"></div>
-                                                                        </div>
-                                                                    {% else %}
-                                                                        <div id="progress_bar_active_{{_id}}" class="progress progress-striped">
-                                                                            <div id="progress_bar_{{_id}}" class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: {{progress}}%;"></div>
-                                                                        </div>
-                                                                    {% endif %}
+                                                            {% if run_status %}
+                                                                {% if progress in range(0,25)  %}
+                                                                    <div id="progress_bar_active_{{_id}}" class="progress progress-striped active">
+                                                                        <div id="progress_bar_{{_id}}" class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: {{progress}}%;"></div>
+                                                                    </div>
+                                                                {% elif progress in range(25,50)  %}
+                                                                    <div id="progress_bar_active_{{_id}}" class="progress progress-striped active">
+                                                                        <div id="progress_bar_{{_id}}" class="progress-bar progress-bar-warning" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: {{progress}}%;"></div>
+                                                                    </div>
                                                                 {% else %}
+                                                                    <div id="progress_bar_active_{{_id}}" class="progress progress-striped">
+                                                                        <div id="progress_bar_{{_id}}" class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: {{progress}}%;"></div>
+                                                                    </div>
+                                                                {% endif %}
+                                                            {% else %}
+                                                                {% if batch_deploy_status %}
                                                                     {% if jacoco_status %}
                                                                         <button class="btn btn-primary" type="button" id="jacoco_btn" disabled>统计覆盖率</button>
                                                                     {% endif %}
                                                                     <button class="btn btn-primary" type="button" id="edit_btn" style="margin-left:10px" disabled>编 辑</button>
                                                                     <button class="btn btn-primary" type="button" id="deploy_btn" style="margin-left:10px" disabled>部 署</button>
-                                                                {% endif %}
-                                                            {% else %}
-                                                                {% if run_status %}
-                                                                    {% if progress in range(0,60)  %}
-                                                                        <div id="progress_bar_active_{{_id}}" class="progress progress-striped active">
-                                                                            <div id="progress_bar_{{_id}}" class="progress-bar progress-bar-warning" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: {{progress}}%;"></div>
-                                                                        </div>
-                                                                    {% elif progress in range(60,100)  %}
-                                                                        <div id="progress_bar_active_{{_id}}" class="progress progress-striped active">
-                                                                            <div id="progress_bar_{{_id}}" class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: {{progress}}%;"></div>
-                                                                        </div>
-                                                                    {% else %}
-                                                                        <div id="progress_bar_active_{{_id}}" class="progress progress-striped">
-                                                                            <div id="progress_bar_{{_id}}" class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: {{progress}}%;"></div>
-                                                                        </div>
-                                                                    {% endif %}
                                                                 {% else %}
                                                                     {% if jacoco_status %}
                                                                         <button class="btn btn-primary" type="button" id="jacoco_btn" onclick="jacoco_exec('{{ pro_name }}','{{ nginx_api_proxy }}','{{ deploy_name }}')">统计覆盖率</button>
@@ -456,7 +470,7 @@
         <script src="/{{nginx_api_proxy}}/Build/scripts/jquery-4a356126b9.min.js" type="text/javascript"></script>
         <script src="/{{nginx_api_proxy}}/Build/scripts/bootstrap-4becdc9104.min.js" type="text/javascript"></script>
         <script src="/{{nginx_api_proxy}}/Build/scripts/common-afd42073e5.js" type="text/javascript"></script>
-        <script src="/{{nginx_api_proxy}}/Build/scripts/deploy-a87f63ef84.js" type="text/javascript"></script>
+        <script src="/{{nginx_api_proxy}}/Build/scripts/deploy-b54a012602.js" type="text/javascript"></script>
         <script src="/{{nginx_api_proxy}}/Build/scripts/sweetalert-73703859f8.min.js" type="text/javascript"></script>
         <script src="/{{nginx_api_proxy}}/Build/scripts/jquery-8f77d5ae3f.dataTables.js" type="text/javascript"></script>
         <script src="/{{nginx_api_proxy}}/Build/scripts/dataTables-2be5d77c55.bootstrap.js" type="text/javascript"></script>
@@ -464,6 +478,11 @@
         <!-- 若当前有模块在部署，则实时更新该模块的进度信息 -->
         <script language="javascript" type="text/javascript">
             $(document).ready(update_module_progress('{{ pro_name }}','{{ nginx_api_proxy }}', '{{ module_is_run }}', '{{ deploy_name_list_str }}'))
+        </script>
+
+        <!-- 批量部署的进度更新 -->
+        <script language="javascript" type="text/javascript">
+            $(document).ready(update_batch_progress('{{ pro_name }}','{{ nginx_api_proxy }}', '{{ batch_deploy_status }}'))
         </script>
 
         <!-- 设置埋点，控制台显示页面的 '白屏时间' -->

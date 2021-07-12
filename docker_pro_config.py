@@ -21,6 +21,9 @@ def create_collection(pro_name):
     # 获取 集合（若不存在）
     mycoll = mydb[pro_name + "_config"]
 
+    # 清空集合
+    # mycoll.remove()
+
     # 判断 config_name = batch_deploy 是否存在
     res = mycoll.find_one({"config_name": "batch_deploy"})
     if res:

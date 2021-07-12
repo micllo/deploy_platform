@@ -30,16 +30,17 @@ def show_index():
 @flask_app.route("/DEPLOY/show_deploy_info/<pro_name>", methods=["GET"])
 def show_deploy_info(pro_name):
     """   显示 部署页面   """
-    result_dict = dict()
-    result_dict["nginx_api_proxy"] = cfg.NGINX_API_PROXY
-    result_dict["pro_name"] = pro_name
-    result_dict["batch_deploy_status"] = get_batch_deploy_status(pro_name=pro_name)
-    result_dict["deploy_info_list"], result_dict["deploy_name_list_str"], result_dict["module_is_run"] = \
-        get_deploy_info(pro_name)
-    result_dict["sonar_url"] = cfg.SONAR_URL
-    result_dict["jacoco_report_url"] = cfg.JACOCO_REPORT_BASE_URL
-    result_dict["apiTest_report_url"] = cfg.API_TEST_REPORT_URL
-    return render_template('deploy.html', tasks=result_dict)
+    res = dict()
+    res["nginx_api_proxy"] = cfg.NGINX_API_PROXY
+    res["pro_name"] = pro_name
+    res["batch_deploy_status"] = get_batch_deploy_status(pro_name=pro_name)
+    res["progress"], res["done_num"], res["all_num"], res["running_serial_num"] = \
+        get_batch_current_progress(pro_name=pro_name)
+    res["deploy_info_list"], res["deploy_name_list_str"], res["module_is_run"] = get_deploy_info(pro_name)
+    res["sonar_url"] = cfg.SONAR_URL
+    res["jacoco_report_url"] = cfg.JACOCO_REPORT_BASE_URL
+    res["apiTest_report_url"] = cfg.API_TEST_REPORT_URL
+    return render_template('deploy.html', tasks=res)
 
 
 # http://127.0.0.1:3310/api_local/DEPLOY/show_deploy_log
@@ -181,8 +182,8 @@ def search_deploy_log():
     return json.dumps(res_info, ensure_ascii=False)
 
 
-@flask_app.route("/DEPLOY/get_moudule_progress/<pro_name>/<deploy_name>", methods=["GET"])
-def get_moudule_progress(pro_name, deploy_name):
+@flask_app.route("/DEPLOY/get_module_progress/<pro_name>/<deploy_name>", methods=["GET"])
+def get_module_progress(pro_name, deploy_name):
     """
     获取 正在运行中的模块 当前进度
     :param pro_name
@@ -191,8 +192,20 @@ def get_moudule_progress(pro_name, deploy_name):
     """
     res_info = dict()
     res_info["_id"], res_info["run_status"], res_info["progress"] \
-        = get_moudule_current_progress(pro_name=pro_name, deploy_name=deploy_name)
+        = get_module_current_progress(pro_name=pro_name, deploy_name=deploy_name)
     return json.dumps(res_info, ensure_ascii=False)
+
+
+@flask_app.route("/DEPLOY/get_batch_progress/<pro_name>", methods=["GET"])
+def get_batch_progress(pro_name):
+    """
+    获取 批量部署 当前进度
+    :param pro_name
+    :return:
+    """
+    res = dict()
+    res["progress"], res["done_num"], res["all_num"], res['running_serial_num'] = get_batch_current_progress(pro_name=pro_name)
+    return json.dumps(res, ensure_ascii=False)
 
 
 @flask_app.route("/DEPLOY/set_deploy_status_all/<pro_name>/<deploy_status>", methods=["GET"])
@@ -230,5 +243,4 @@ def stop_run_status_all(pro_name):
     else:
         res_info["msg"] = stop_run_status(pro_name)
     return json.dumps(res_info, ensure_ascii=False)
-
 

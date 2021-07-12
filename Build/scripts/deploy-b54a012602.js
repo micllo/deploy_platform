@@ -315,6 +315,43 @@ function jacoco_exec(pro_name, nginx_api_proxy, deploy_name) {
 
 
 /**
+ * 更新 批量部署 进度
+ * @param pro_name
+ * @param nginx_api_proxy
+ * @param batch_deploy_status
+ */
+function update_batch_progress(pro_name, nginx_api_proxy, batch_deploy_status) {
+    if(batch_deploy_status == "True"){
+        // 更改进度条样式
+        $("#progress_bar_active_batch").attr("class", "progress progress-striped active");
+
+        var interval = setInterval(function () {
+            var request_url = "/" + nginx_api_proxy + "/DEPLOY/get_batch_progress/" + pro_name;
+            var response = request_interface_url_v2(url=request_url, method="GET", async=false);
+            var progress = response.progress;
+            var done_num = response.done_num;
+            var all_num = response.all_num;
+
+            if(progress < 100) {
+                $("#progress_bar_batch").css({"width": progress + "%"});
+                $("#progress_label").text(progress + " % --（ " + done_num + " / " + all_num + " )")
+                if(progress >= 0 && progress < 25 ){
+                    $("#progress_bar_batch").attr("class", "progress-bar progress-bar-danger");
+                }else if(progress >= 25 && progress < 50 ){
+                    $("#progress_bar_batch").attr("class", "progress-bar progress-bar-warning");
+                }else {
+                    $("#progress_bar_batch").attr("class", "progress-bar progress-bar-success");
+                }
+            }else{
+                clearInterval(interval);
+                location.reload();
+            }
+        }, 5000);
+    }
+}
+
+
+/**
  *  更新 模块 进度信息
  *
  *  1.判断是否存在运行中的模块
@@ -327,7 +364,7 @@ function update_module_progress(pro_name, nginx_api_proxy, module_is_run, deploy
         // 将模块名称列表字符串 转换成 列表
         var deploy_name_list = deploy_name_list_str.split(",");
         $.each(deploy_name_list, function(n, deploy_name) {
-            var request_url = "/" + nginx_api_proxy + "/DEPLOY/get_moudule_progress/" + pro_name + "/" + deploy_name;
+            var request_url = "/" + nginx_api_proxy + "/DEPLOY/get_module_progress/" + pro_name + "/" + deploy_name;
             var response1 = request_interface_url_v2(url=request_url, method="GET", async=false);
             var run_status = response1.run_status;
             // 若该模块正在运行中，则轮询修改进度信息
@@ -362,10 +399,10 @@ function update_module_progress(pro_name, nginx_api_proxy, module_is_run, deploy
                             $("#progress_bar_" + id).css({"width": progress + "%"}); // 方式一：修改css样式（修改的是'style'属性中的内容）
                             // $("#progress_bar_" + id).attr("style", "width:" + progress + "%");  // 方式二：修改属性
                             // 更新进度条样式
-                            $("#progress_bar_" + id).attr("class", "progress progress-striped active");
-                            if(progress > 0 && progress <= 25 ){
+                            $("#progress_bar_active_" + id).attr("class", "progress progress-striped active");
+                            if(progress >= 0 && progress < 25 ){
                                 $("#progress_bar_" + id).attr("class", "progress-bar progress-bar-danger");
-                            }else if(progress > 25 && progress <= 50 ){
+                            }else if(progress >= 25 && progress < 50 ){
                                 $("#progress_bar_" + id).attr("class", "progress-bar progress-bar-warning");
                             }else{
                                 $("#progress_bar_" + id).attr("class", "progress-bar progress-bar-success");
