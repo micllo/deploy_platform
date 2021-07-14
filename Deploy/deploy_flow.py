@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 from Env import env_config as cfg
 import os, time
-from Common.com_func import is_null, log, deploy_monitor_send_DD, mkdir, mongo_exception_send_DD
+from Common.com_func import is_null, log, deploy_monitor_send_DD, mkdir, mongo_exception_send_DD, exception_send_DD
 from Tools.mongodb import MongodbUtils
 from fabric.api import *
 from fabric.api import env
@@ -208,11 +208,11 @@ class deployPro(object):
                     (self.output.getvalue().find("unable to access 'http") != -1 and
                      (self.output.getvalue().find("Couldn't connect to server") != -1 or
                       self.output.getvalue().find("Connection refused") != -1)):
-                self.deploy_result = "拉取代码失败(gitlab库连接超时)"
+                self.deploy_result = "拉取代码失败:gitlab库连接超时"
             elif (self.output.getvalue().find("warning: Could not find remote branch " + self.branch + " to clone")) != -1:
-                self.deploy_result = "拉取代码失败(部署分支不存在)"
+                self.deploy_result = "拉取代码失败:部署分支不存在"
             else:
-                self.deploy_result = "本地操作(其他异常情况)"
+                self.deploy_result = "本地操作:其他异常情况"
 
     def check_deploy_file(self, deploy_file_path):
         """
@@ -237,7 +237,7 @@ class deployPro(object):
                     self.deploy_result = "构建失败"
                 elif self.output.getvalue().find("The requested profile") != -1 and \
                         self.output.getvalue().find("could not be activated because it does not exist") != -1:
-                    self.deploy_result = "构建失败(构建环境不存在)"
+                    self.deploy_result = "构建失败:构建环境不存在"
 
     def upload_deploy_file(self, deploy_file_path):
         """
@@ -275,7 +275,7 @@ class deployPro(object):
             Mac：ls -lU 当前时间
                  ls -lc 修改时间
         """
-        if cfg.CURRENT_ENV == "MAC":
+        if self.deploy_name == "pro_demo_1-deploy-uat-9":  # 临时的配置（因为该项目是部署在mac上的）
             return int(self.custom_run("ls -lc " + self.remote_path + "/tmp/" + self.deploy_file + " | awk '{print $5}'",
                                        warn_only=True)) * 100
         else:
@@ -382,94 +382,98 @@ class deployPro(object):
             # log.info(traceback.print_exc())
 
     def run_deploy(self):
-        self.deploy_log += "\n\n+++++++++++++++++ " + self.deploy_name + " 部 署 开 始 ( 共" + str(self.setp_num) + \
-                           "个步骤 ) +++++++++++++++++\n"
-        # 1.本地操作（通过SSH方式，为了捕获异常信息）
-        mkdir(cfg.WORKSPACE)  # 若目录不存在则创建
         try:
-            with settings(host_string="%s@%s:%s" % (cfg.LOCAL_USER, cfg.LOCAL_HOST, cfg.LOCAL_PORT),
-                          password=cfg.LOCAL_PASSWD):
-                with cd(cfg.WORKSPACE):
-                    self.local_opt_step_common()     # 本地操作步骤（共同）
-                    self.calculate_progress()
-                    self.local_opt_step_different()  # 本地操作步骤（区分项目）
-                    self.calculate_progress()
-        except FabricException as e:
-            self.exception_info = e
-
-        # 检查：拉取代码是否成功、构建是否成功、部署文件是否存在
-        self.check_pull_result()
-        self.check_bulid_situation()
-        self.check_deploy_file(self.get_deploy_file_path())
-
-        # 2.上传部署文件（获取当前时间戳）
-        self.current_time = get_current_timestamp()
-        self.upload_deploy_file(self.get_deploy_file_path())
-        self.calculate_progress()
-
-        # 3.服务器端操作（解压、配置、重启服务）
-        if is_null(self.deploy_result):
+            self.deploy_log += "\n\n+++++++++++++++++ " + self.deploy_name + " 部 署 开 始 ( 共" + str(self.setp_num) + \
+                               "个步骤 ) +++++++++++++++++\n"
+            # 1.本地操作（通过SSH方式，为了捕获异常信息）
+            mkdir(cfg.WORKSPACE)  # 若目录不存在则创建
             try:
-                with settings(host_string="%s@%s:%s" % (self.ssh_user, self.ssh_host, self.ssh_port),
-                              password=self.ssh_passwd):
-                    self.deploy_log += "\n服务器端操作：获取部署前PID、部署文件创建时间戳\n"
-                    self.current_pid = self.get_server_pid(self.get_server_pid_cmd())
-                    self.file_time = self.get_file_time()
-                    self.server_opt_step_different()  # 服务器操作步骤（区分项目）
-                    time.sleep(5)
-                    self.deploy_log += "\n服务器端操作：获取部署后PID\n"
-                    self.deploy_pid = self.get_server_pid(self.get_server_pid_cmd())
+                with settings(host_string="%s@%s:%s" % (cfg.LOCAL_USER, cfg.LOCAL_HOST, cfg.LOCAL_PORT),
+                              password=cfg.LOCAL_PASSWD):
+                    with cd(cfg.WORKSPACE):
+                        self.local_opt_step_common()     # 本地操作步骤（共同）
+                        self.calculate_progress()
+                        self.local_opt_step_different()  # 本地操作步骤（区分项目）
+                        self.calculate_progress()
             except FabricException as e:
                 self.exception_info = e
-            if self.exception_info:
-                self.deploy_result = "服务器端操作有异常"
-            else:
-                self.check_deploy_info()  # 检查部署信息（ 部署文件时间戳、进程ID ）
+
+            # 检查：拉取代码是否成功、构建是否成功、部署文件是否存在
+            self.check_pull_result()
+            self.check_bulid_situation()
+            self.check_deploy_file(self.get_deploy_file_path())
+
+            # 2.上传部署文件（获取当前时间戳）
+            self.current_time = get_current_timestamp()
+            self.upload_deploy_file(self.get_deploy_file_path())
             self.calculate_progress()
 
-        if is_null(self.deploy_result):
-
-            # 4.Sonar扫描（直接本地操作）<可选项>
-            sonar_msg = ""
-            if self.sonar_status:
-                self.sonar_scan()  # Sonar 静态扫描（区分项目）
-                if self.exception_info or self.sonar_log.find("Calculating CPD for 0 files") != -1:
-                    sonar_msg = "(Sonar配置有误)"
+            # 3.服务器端操作（解压、配置、重启服务）
+            if is_null(self.deploy_result):
+                try:
+                    with settings(host_string="%s@%s:%s" % (self.ssh_user, self.ssh_host, self.ssh_port),
+                                  password=self.ssh_passwd):
+                        self.deploy_log += "\n服务器端操作：获取部署前PID、部署文件创建时间戳\n"
+                        self.current_pid = self.get_server_pid(self.get_server_pid_cmd())
+                        self.file_time = self.get_file_time()
+                        self.server_opt_step_different()  # 服务器操作步骤（区分项目）
+                        time.sleep(5)
+                        self.deploy_log += "\n服务器端操作：获取部署后PID\n"
+                        self.deploy_pid = self.get_server_pid(self.get_server_pid_cmd())
+                except FabricException as e:
+                    self.exception_info = e
+                if self.exception_info:
+                    self.deploy_result = "服务器端操作有异常"
                 else:
-                    if self.sonar_log.find("ANALYSIS SUCCESSFUL") == -1 or self.sonar_log.find("EXECUTION SUCCESS") == -1:
-                        sonar_msg = "(Sonar扫描失败)"
+                    self.check_deploy_info()  # 检查部署信息（ 部署文件时间戳、进程ID ）
                 self.calculate_progress()
 
-            # 5.启动Jacoco服务（仅针对Java项目） <可选项>
-            if self.jacoco_status:
-                self.start_jacoco_server()
+            if is_null(self.deploy_result):
 
-            # 6.接口自动化测试 <可选项>
-            if self.apiTest_status:
-                self.api_auto_test()
-                self.calculate_progress()
+                # 4.Sonar扫描（直接本地操作）<可选项>
+                sonar_msg = ""
+                if self.sonar_status:
+                    self.sonar_scan()  # Sonar 静态扫描（区分项目）
+                    if self.exception_info or self.sonar_log.find("Calculating CPD for 0 files") != -1:
+                        sonar_msg = "(Sonar配置有误)"
+                    else:
+                        if self.sonar_log.find("ANALYSIS SUCCESSFUL") == -1 or self.sonar_log.find("EXECUTION SUCCESS") == -1:
+                            sonar_msg = "(Sonar扫描失败)"
+                    self.calculate_progress()
 
-            # 7.生成Jacoco代码覆盖率报告（仅针对Java项目）<可选项>
-            if self.jacoco_status:
-                self.get_jacoco_report()
-                self.calculate_progress()
+                # 5.启动Jacoco服务（仅针对Java项目） <可选项>
+                if self.jacoco_status:
+                    self.start_jacoco_server()
 
-            self.deploy_result = "部 署 成 功" + sonar_msg
-            self.deploy_log += "\n++++++++++++++++++++++++ " + self.deploy_name + \
-                               " 部 署 成 功 ！！！ ++++++++++++++++++++++++\n"
-        else:
-            self.deploy_log += "\n++++++++++++++++++++++++ " + self.deploy_name + \
-                               " 部 署 终 止 ？？？ ++++++++++++++++++++++++\n"
-        # 完善部署日志
-        self.complete_deploy_log()
-        self.output.close()  # 释放StringIO缓冲区，执行此函数后，数据将被释放，也不可再进行操作
+                # 6.接口自动化测试 <可选项>
+                if self.apiTest_status:
+                    self.api_auto_test()
+                    self.calculate_progress()
 
-        # 8.部署结果 发送钉钉
-        deploy_monitor_send_DD(deploy_name=self.deploy_name, module_name=self.module_name, exec_type=self.exec_type,
-                               deploy_host=self.ssh_host, branch=self.branch, build_env=self.build_env,
-                               deploy_result=self.deploy_result, deploy_time=self.deploy_time,
-                               sonar_status=self.sonar_status, sonar_key=self.sonar_key,
-                               jacoco_status=self.jacoco_status, apiTest_status=self.apiTest_status)
+                # 7.生成Jacoco代码覆盖率报告（仅针对Java项目）<可选项>
+                if self.jacoco_status:
+                    self.get_jacoco_report()
+                    self.calculate_progress()
+
+                self.deploy_result = "部 署 成 功" + sonar_msg
+                self.deploy_log += "\n++++++++++++++++++++++++ " + self.deploy_name + \
+                                   " 部 署 成 功 ！！！ ++++++++++++++++++++++++\n"
+            else:
+                self.deploy_log += "\n++++++++++++++++++++++++ " + self.deploy_name + \
+                                   " 部 署 终 止 ？？？ ++++++++++++++++++++++++\n"
+            # 完善部署日志
+            self.complete_deploy_log()
+            self.output.close()  # 释放StringIO缓冲区，执行此函数后，数据将被释放，也不可再进行操作
+
+            # 8.部署结果 发送钉钉
+            deploy_monitor_send_DD(deploy_name=self.deploy_name, module_name=self.module_name, exec_type=self.exec_type,
+                                   deploy_host=self.ssh_host, branch=self.branch, build_env=self.build_env,
+                                   deploy_result=self.deploy_result, deploy_time=self.deploy_time,
+                                   sonar_status=self.sonar_status, sonar_key=self.sonar_key,
+                                   jacoco_status=self.jacoco_status, apiTest_status=self.apiTest_status)
+        except Exception as e:
+            self.deploy_result = "部署脚本出错"
+            exception_send_DD(e=e, msg=self.pro_name + " 项目部署脚本出错")
 
     def local_opt_step_different(self):
         """ 本地操作步骤（区分项目） """

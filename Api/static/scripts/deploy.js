@@ -335,9 +335,9 @@ function update_batch_progress(pro_name, nginx_api_proxy, batch_deploy_status) {
             if(progress < 100) {
                 $("#progress_bar_batch").css({"width": progress + "%"});
                 $("#progress_label").text(progress + " % --（ " + done_num + " / " + all_num + " )")
-                if(progress >= 0 && progress < 25 ){
+                if(progress >= 0 && progress < 30 ){
                     $("#progress_bar_batch").attr("class", "progress-bar progress-bar-danger");
-                }else if(progress >= 25 && progress < 50 ){
+                }else if(progress >= 30 && progress < 60 ){
                     $("#progress_bar_batch").attr("class", "progress-bar progress-bar-warning");
                 }else {
                     $("#progress_bar_batch").attr("class", "progress-bar progress-bar-success");
@@ -394,26 +394,31 @@ function update_module_progress(pro_name, nginx_api_proxy, module_is_run, deploy
 
                     // ------ 修改 操作（更新进度条） ------
                     if(run_status){
-                        if(progress < 100){
+                        // 更新进度条样式
+                         $("#progress_bar_active_" + id).attr("class", "progress progress-striped active");
+                        if(progress < 100) {
                             // 更新进度条记录
                             $("#progress_bar_" + id).css({"width": progress + "%"}); // 方式一：修改css样式（修改的是'style'属性中的内容）
                             // $("#progress_bar_" + id).attr("style", "width:" + progress + "%");  // 方式二：修改属性
-                            // 更新进度条样式
-                            $("#progress_bar_active_" + id).attr("class", "progress progress-striped active");
-                            if(progress >= 0 && progress < 25 ){
+                            if (progress >= 0 && progress < 30) {
                                 $("#progress_bar_" + id).attr("class", "progress-bar progress-bar-danger");
-                            }else if(progress >= 25 && progress < 50 ){
+                            } else if (progress >= 30 && progress < 60) {
                                 $("#progress_bar_" + id).attr("class", "progress-bar progress-bar-warning");
-                            }else{
+                            } else {
                                 $("#progress_bar_" + id).attr("class", "progress-bar progress-bar-success");
                             }
+                        }else if(progress = 100){
+                            clearInterval(interval); // 停止轮询
+                            $("#progress_bar_" + id).css({"width": progress + "%"});
+                            setTimeout(function(){ location.reload(); }, 2000);   // 等待2秒后刷新页面
                         }else{
-                            clearInterval(interval); // 用于停止 setInterval() 方法执行的函数代码
+                            clearInterval(interval); // 停止轮询
                             location.reload();
                         }
                     }else{
-                        clearInterval(interval); // 用于停止 setInterval() 方法执行的函数代码
-                        location.reload();
+                        clearInterval(interval); // 停止轮询
+                        $("#progress_bar_" + id).css({"width": progress + "%"});
+                        setTimeout(function(){ location.reload(); }, 2000);   // 等待2秒后刷新页面
                     }
                 }, 1000);
             }

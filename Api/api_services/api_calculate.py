@@ -36,11 +36,10 @@ def run_single_deploy(pro_name, deploy_name, exec_type):
     :param exec_type：manual | batch | gitlab
     :return:
     """
+    deploy_time = get_current_iso_date()
     with MongodbUtils(ip=cfg.MONGODB_ADDR, database=cfg.MONGODB_DATABASE,
                       collection=pro_name + cfg.TABLE_MODULE) as pro_db:
         try:
-            deploy_time = get_current_iso_date()
-
             # 开启运行状态、初始化进度条、临时更新部署结果
             pro_db.update({"deploy_name": deploy_name}, {"$set": {"run_status": True, "progress": 0,
                                                                   "deploy_result": "部 署 中 ..."}})
@@ -487,6 +486,7 @@ def get_batch_current_progress(pro_name):
             # 将集合转换成列表 并按照部署序号排序
             deploy_list = sorted(list(results_cursor), key=lambda keys: keys["serial_num"])
         except Exception as e:
+            print(e)
             mongo_exception_send_DD(e=e, msg="获取'" + pro_name + "'项目批量部署进度")
         finally:
             all_num = len(deploy_list)

@@ -73,9 +73,9 @@
                                      <div class="col-sm-6" style="margin-left:5%; margin-top:2.5%">
                                          {% if batch_deploy_status %}
                                              <div id="progress_bar_active_batch" class="progress progress-striped active">
-                                                {% if progress in range(0,25)  %}
+                                                {% if progress in range(0,30)  %}
                                                     <div id="progress_bar_batch" class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: {{progress}}%;"></div>
-                                                {% elif progress in range(25,50)  %}
+                                                {% elif progress in range(30,60)  %}
                                                     <div id="progress_bar_batch" class="progress-bar progress-bar-warning" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: {{progress}}%;"></div>
                                                 {% else %}
                                                     <div id="progress_bar_batch" class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: {{progress}}%;"></div>
@@ -211,11 +211,11 @@
                                                         {# 操作 #}
                                                         <td class="text-center" style="width: 200px; display:table-cell; vertical-align:middle;">
                                                             {% if run_status %}
-                                                                {% if progress in range(0,25)  %}
+                                                                {% if progress in range(0,30)  %}
                                                                     <div id="progress_bar_active_{{_id}}" class="progress progress-striped active">
                                                                         <div id="progress_bar_{{_id}}" class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: {{progress}}%;"></div>
                                                                     </div>
-                                                                {% elif progress in range(25,50)  %}
+                                                                {% elif progress in range(30,60)  %}
                                                                     <div id="progress_bar_active_{{_id}}" class="progress progress-striped active">
                                                                         <div id="progress_bar_{{_id}}" class="progress-bar progress-bar-warning" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: {{progress}}%;"></div>
                                                                     </div>

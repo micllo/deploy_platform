@@ -73,9 +73,9 @@
                                      <div class="col-sm-6" style="margin-left:5%; margin-top:2.5%">
                                          {% if batch_deploy_status %}
                                              <div id="progress_bar_active_batch" class="progress progress-striped active">
-                                                {% if progress in range(0,25)  %}
+                                                {% if progress in range(0,30)  %}
                                                     <div id="progress_bar_batch" class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: {{progress}}%;"></div>
-                                                {% elif progress in range(25,50)  %}
+                                                {% elif progress in range(30,60)  %}
                                                     <div id="progress_bar_batch" class="progress-bar progress-bar-warning" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: {{progress}}%;"></div>
                                                 {% else %}
                                                     <div id="progress_bar_batch" class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: {{progress}}%;"></div>
@@ -211,11 +211,11 @@
                                                         {# 操作 #}
                                                         <td class="text-center" style="width: 200px; display:table-cell; vertical-align:middle;">
                                                             {% if run_status %}
-                                                                {% if progress in range(0,25)  %}
+                                                                {% if progress in range(0,30)  %}
                                                                     <div id="progress_bar_active_{{_id}}" class="progress progress-striped active">
                                                                         <div id="progress_bar_{{_id}}" class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: {{progress}}%;"></div>
                                                                     </div>
-                                                                {% elif progress in range(25,50)  %}
+                                                                {% elif progress in range(30,60)  %}
                                                                     <div id="progress_bar_active_{{_id}}" class="progress progress-striped active">
                                                                         <div id="progress_bar_{{_id}}" class="progress-bar progress-bar-warning" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: {{progress}}%;"></div>
                                                                     </div>
@@ -469,7 +469,7 @@
         <script src="/{{nginx_api_proxy}}/Build/scripts/jquery-4a356126b9.min.js" type="text/javascript"></script>
         <script src="/{{nginx_api_proxy}}/Build/scripts/bootstrap-4becdc9104.min.js" type="text/javascript"></script>
         <script src="/{{nginx_api_proxy}}/Build/scripts/common-afd42073e5.js" type="text/javascript"></script>
-        <script src="/{{nginx_api_proxy}}/Build/scripts/deploy-b54a012602.js" type="text/javascript"></script>
+        <script src="/{{nginx_api_proxy}}/Build/scripts/deploy-3566988d40.js" type="text/javascript"></script>
         <script src="/{{nginx_api_proxy}}/Build/scripts/sweetalert-73703859f8.min.js" type="text/javascript"></script>
         <script src="/{{nginx_api_proxy}}/Build/scripts/jquery-8f77d5ae3f.dataTables.js" type="text/javascript"></script>
         <script src="/{{nginx_api_proxy}}/Build/scripts/dataTables-2be5d77c55.bootstrap.js" type="text/javascript"></script>
