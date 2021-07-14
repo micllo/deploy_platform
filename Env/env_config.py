@@ -37,6 +37,8 @@ SONAR_URL = "http://" + SERVER_IP + ":9000/dashboard?id="
 # http://127.0.0.1:3310/jacoco_report_local/deploy/report/index.html
 JACOCO_REPORT_BASE_URL = "http://" + SERVER_IP + ":" + NGINX_PORT + "/jacoco_report_local/"
 
+# 当前环境
+CURRENT_ENV = "MAC"
 
 ############################################# 相 同 的 配 置 #############################################
 

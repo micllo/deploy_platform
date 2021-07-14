@@ -1,15 +1,14 @@
 # -*- coding:utf-8 -*-
 from Env import env_config as cfg
-import os, time
+import os
 from Tools.mongodb import MongodbUtils
 from Common.com_func import is_null, log, mongo_exception_send_DD, exception_send_DD, mkdir, deploy_send_DD
-from Common.deploy_flow import deployPro
+from Deploy.deploy_flow import deployPro
 from Tools.date_helper import get_current_iso_date
 from bson.objectid import ObjectId
 from Tools.decorator_tools import async
 from threading import Thread
 from fabric.api import *
-import traceback
 
 """
     api 服务底层的业务逻辑

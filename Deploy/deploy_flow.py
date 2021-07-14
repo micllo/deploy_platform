@@ -275,7 +275,7 @@ class deployPro(object):
             Mac：ls -lU 当前时间
                  ls -lc 修改时间
         """
-        if self.deploy_type == "War":  # 临时使用
+        if cfg.CURRENT_ENV == "MAC":
             return int(self.custom_run("ls -lc " + self.remote_path + "/tmp/" + self.deploy_file + " | awk '{print $5}'",
                                        warn_only=True)) * 100
         else:

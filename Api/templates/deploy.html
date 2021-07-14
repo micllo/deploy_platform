@@ -55,8 +55,7 @@
                                          {% endif %}
                                      </div>
                                      <div class="col-sm-2" align="center" style="line-height:55px; font-size:15px; margin-left:7%">
-{#                                         <button id="stop_status_btn" type="button" class="btn btn-primary" onclick="stop_run_status_all('{{ pro_name }}','{{ nginx_api_proxy }}')"> 停 止 运 行 状 态</button>#}
-                                         <button id="stop_status_btn" type="button" class="btn btn-primary" onclick="update_batch_progress('{{ pro_name }}','{{ nginx_api_proxy }}', '{{ batch_deploy_status }}')"> 停 止 运 行 状 态</button>
+                                         <button id="stop_status_btn" type="button" class="btn btn-primary" onclick="stop_run_status_all('{{ pro_name }}','{{ nginx_api_proxy }}')"> 停 止 运 行 状 态</button>
                                      </div>
                                      <div class="col-sm-2" align="center" style="line-height:55px; font-size:15px; margin-left:7%">
                                          <button id="history_report_url" type="button" class="btn btn-primary" onclick="window.open('/{{ nginx_api_proxy }}/DEPLOY/show_deploy_log/{{ pro_name }}')"> 查 看 部 署 日 志</button>

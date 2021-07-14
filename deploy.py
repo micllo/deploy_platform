@@ -7,7 +7,7 @@ import time
 
 # 设置变量
 host = cfg.SERVER_IP
-port = "1122"
+port = "1622"
 user = "centos"
 passwd = "centos"
 pro_name = "deploy_platform"
@@ -44,6 +44,8 @@ def local_action():
         local("rm -rf node_modules")
         local("rm -rf nohup.out")
         local("rm -rf tmp_uwsgi_pid.txt")
+        local("rm -rf Jacoco_Report")
+        local("rm -rf workspace")
         local("ls")
     # 归档压缩 临时文件夹中的项目（ 可以不进入目录，直接执行 ）
     with lcd(tmp_path):
@@ -77,6 +79,9 @@ def server_action():
         # run("sudo mongod -f /tools/mongodb/bin/mongodb.conf", warn_only=False)  # 不忽略失败的命令，不能继续执行
         run("sh /home/centos/start_nginx.sh", warn_only=False)
         run("sh /home/centos/start_uwsgi.sh", warn_only=False, pty=False)  # 参数pty：解决'fabric'执行'nohub'的问题
+
+        # 启动'Sonar'服务
+        run("/tools/sonarqube-7.7/bin/linux-x86-64/sonar.sh start", warn_only=True)
 
         # 清空临时文件夹
         with cd(remote_tmp_path):

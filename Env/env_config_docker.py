@@ -31,12 +31,14 @@ API_TEST_URL = API_TEST_BASE_URL + "/exec/deploy"
 API_TEST_REPORT_URL = API_TEST_BASE_URL + "/get_test_report/"
 
 # Sonar报告 地址
-SONAR_URL = "http://" + SERVER_IP + ":9000/dashboard?id="
+SONAR_URL = "http://" + SERVER_IP + ":9900/dashboard?id="
 
 # Jacoco测试覆盖率报告目录
 # http://127.0.0.1:1680/jacoco_report/deploy/report/index.html
 JACOCO_REPORT_BASE_URL = "http://" + SERVER_IP + ":" + NGINX_PORT + "/jacoco_report/"
 
+# 当前环境
+CURRENT_ENV = "CENTOS"
 
 ############################################# 相 同 的 配 置 #############################################
 
@@ -46,7 +48,7 @@ API_ADDR = SERVER_IP + ":" + NGINX_PORT + "/" + NGINX_API_PROXY
 
 # Mongo 数据库
 MONGODB_DATABASE = "deploy_platform"
-TABLE_CASE = "_case"
+TABLE_MODULE = "_module"
 TABLE_CONFIG = "_config"
 
 # gitlab 下载地址
