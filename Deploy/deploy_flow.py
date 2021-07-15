@@ -314,6 +314,7 @@ class deployPro(object):
 
     def start_jacoco_server(self):
         """ 启动 Jacoco 监听服务 """
+        self.deploy_log += "\n-------- 启动 Jacoco 监听服务 --------\n"
         self.deploy_log += "\n服务器端操作：启动 Jacoco 监听服务\n"
         try:
             with settings(host_string="%s@%s:%s" % (self.ssh_user, self.ssh_host, self.ssh_port),
@@ -340,7 +341,7 @@ class deployPro(object):
         try:
             time.sleep(5)  # API 自动化测试 是另起线程执行的
 
-            self.deploy_log += "\n-------- 获取Jacoco测试覆盖率报告 --------\n"
+            self.deploy_log += "\n-------- 获取 Jacoco 测试覆盖率报告 --------\n"
             self.deploy_log += "本地操作目录 " + cfg.JACOCO_REPORT_DIR + self.module_name + "\n"
             self.deploy_log += "服务器端操作目录 " + self.jacoco_path + "\n"
 

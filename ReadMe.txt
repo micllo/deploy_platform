@@ -17,6 +17,19 @@
 （1）Maven 指定 Nexus 私有库地址
    （ 本地启动：nexus start ）
 
+4.配置 Sonar 与 MySQL_5.7.20 的连接
+（1）进入 mysql 命令
+    docker exec -it mysql /bin/bash
+    mysql -h localhost -u root -p  ( passwd : 123456 )
+    select version();  ->  8.0.25
+（2）在 config/sonar.properties 中配置账号及数据库
+（3）在 mysql 中创建相应的配置
+     创建 sonar_db 数据库：create database sonar_db default character set utf8 collate utf8_general_ci;
+     创建 sonar 账号：create user 'sonar' identified by '123456';
+     给 sonar 账号赋予 sonar_db 数据库的所有权限：grant all privileges on sonar_db.* to 'sonar'@'%';
+     使 sonar 账号 可以在 Navicat 客户端访问：alter user 'sonar'@'%' identified with mysql_native_password by '123456';
+       （ 注：flush privileges; 该命令可以不使用）
+
 
 ########################################################################################################################
 
