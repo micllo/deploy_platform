@@ -54,6 +54,9 @@ def local_action():
     with settings(host_string="%s@%s:%s" % (user, host, port), password=passwd):
         put(remote_path=remote_tmp_path, local_path=deploy_file)
 
+    # 启动 Nexus 服务（部署deploy项目需要的私有库）
+    local("nexus start")
+
 
 # 服务器端操作
 def server_action():

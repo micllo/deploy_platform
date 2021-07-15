@@ -1,7 +1,7 @@
 # coding:UTF-8
 import pymongo
-# from Env import env_config as cfg
-from Env import env_config_docker as cfg
+from Env import env_config as cfg
+# from Env import env_config_docker as cfg
 
 """
     【 Docker 项 目 配 置 】
